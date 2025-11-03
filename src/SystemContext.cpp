@@ -1,12 +1,10 @@
 #include "SystemContext.hpp"
 
-
+//생성자 구현 
 SystemContext::SystemContext()
-    :time_start_{},                 // 1) 먼저 초기화
-    initial_r_m{0,0,0},
-    initial_u_m{1,0,0},
-    msm_{/* 필요 시 초기값 */},       // 2) 
-    tsm_{/* 필요 시 초기값 */},       // 3)
+    :time_start_{}, //flight_time 기준 시각            
+    msm_{},        
+    tsm_{},    
     guidance_controller_{msm_, tsm_, time_start_} // 4) 마지막: 참조 주입
 {
    
@@ -40,18 +38,17 @@ SystemContext::runLaunchProcedure_() {
 
     //1. 발사 절차 (핑퐁)  ()
     //2. 발사 명령 + 초기 포착 지점 수신 이벤트 
-    //  "초기 포작 지점"과 "유도탄 초기 위치"(rm, 발사대 위치)로 유도탄 초기 방향(um) 계산 
+    //  "초기 포작 지점"과 "유도탄 초기 위치"(rm, 발사대 위치)로 유도탄 초기 방향(um) 계산
+    Vec3 u_m_init = getInitialPIP_();
+    msm_.setInitialState(u_m_init);
     //  SystemContext의 time_start_ 초기화 (시간 동기화용 -> real time을 flight time으로 변환할 때 기준 시각)
     time_start_ = Clock::now(); 
     guidance_controller_.setFlightStart(time_start_);
-    //3. 유도탄 정보 초기화 (0초의 유도탄 정보) -> MissileStateManager ->update(rm,um,0)메세지 보내기. 
-    //4. return 
     return true;
 }
 
 void startInitialGuidance() {
-    // 0초의 유도탄 정보로 5초의 유도탄 정보 계산 후 초기화-> MissileStateManager ->update(rm,um,5)메세지 보내기. 
-    // 5초 후 return 
+   
 }
 
 void 
@@ -80,4 +77,11 @@ SystemContext::waitMissionEnd_() {
 void 
 SystemContext::finalizeAndReset_() {
     //종료 시점 유도탄 정보, flight time 전송 
+}
+
+
+Vec3
+SystemContext::getInitialPIP_() {
+    //수신한 초기 표적 정보, 유도탄 초기 위치로 u_m_initial 계산 후 return  
+   
 }

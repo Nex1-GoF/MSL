@@ -9,7 +9,7 @@
 void
 GuidanceController::start() {
  if (running_.exchange(true)) return;
-    worker_ = std::thread(&GuidanceController::GuidanceTask, this);
+ worker_ = std::thread(&GuidanceController::GuidanceTask, this);
 }
 
 //전송 by SystemContext
@@ -45,7 +45,7 @@ GuidanceController::GuidanceTask() {
             cur = term_.get();
         }
         else{
-            /*    */
+            running_.store(false);
             return;
 
         }   
@@ -56,6 +56,7 @@ GuidanceController::GuidanceTask() {
         
         
         //일정 주기 sleep
+        //if(running == false) 면 pass -> 잠들지 않고 즉시 빠져나와야됨
         std::this_thread::sleep_until(Clock::now() + 200ms);
     }
 

@@ -17,7 +17,8 @@ MissileStateManager::updateState( missile_state_t new_state, Vec3 new_a_f, doubl
     msl_state.last_update_time = time_now; 
 }
 
-missile_state_t MissileStateManager::getCurrentMissile(double time_now) {
+missile_state_t 
+MissileStateManager::getCurrentMissile(double time_now) {
     std::lock_guard<std::mutex> lock(mtx);
 
     const double dt = time_now - msl_state.last_update_time;
@@ -41,4 +42,10 @@ missile_state_t MissileStateManager::getCurrentMissile(double time_now) {
     msl_state_now.last_update_time = time_now; // 이 스냅샷의 기준 시각
 
     return msl_state_now;
+}
+
+void 
+MissileStateManager::setInitialState(Vec3 u_m_init){
+    std::lock_guard<std::mutex> lock(mtx);
+    msl_state.u_m = u_m_init;
 }
