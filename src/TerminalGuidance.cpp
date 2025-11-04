@@ -5,7 +5,7 @@
 
 static inline double clip(double x, double a, double b) { return x < a ? a : (x > b ? b : x); }
 Vec3
-TerminalGuidance::calculateGuidance(missile_state_t missile_state, target_state_t target_state, double dt) {
+TerminalGuidance::calculateGuidance(missile_state_t m, target_state_t t, double dt) {
     const int PN_SIGN = +1;
     const double N0 = 3.0;   
     const double kN = 2.5;     

@@ -8,7 +8,7 @@ static inline double clip01(double x) { return clip(x, 0.0, 1.0); }
 
 
 Vec3
-MidtermGuidance::calculateGuidance(missile_state_t, target_state_t, double dt){
+MidtermGuidance::calculateGuidance(missile_state_t m, target_state_t t, double dt){
     const int   PN_SIGN = +1;
     const double N_far = 4.0;
     const double N_near = 10.0;
