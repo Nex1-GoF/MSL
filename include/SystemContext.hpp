@@ -3,7 +3,12 @@
 #include "MissileStateManager.hpp"
 #include "TargetStateManager.hpp"
 #include "GuidanceController.hpp"
+#include "Utils.hpp"
+#include <thread>
 #include <atomic>
+#include <chrono>
+#include <memory>
+
 class SystemContext {
 public:
     SystemContext();//생성자 
@@ -16,7 +21,7 @@ private:
     //데이터 
     MissileStateManager msm_;
     TargetStateManager tsm_;
-    //통신부(미정)
+    //통신부(구현 x)
     //Receiver receiver_; 
     //Receiver receive_processor_;
     //유도부 
@@ -36,3 +41,4 @@ private:
     //스레드 관련 
     std::atomic<bool> running_{false};
 };
+

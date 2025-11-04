@@ -3,7 +3,7 @@
 #include "IGuidance.hpp"
 //#include "MidtermGuidance.hpp"
 //#include "TerminalGuidance.hpp"
-#include <thread>
+
 
 //전송 by SystemContext
 void
@@ -46,18 +46,23 @@ GuidanceController::GuidanceTask() {
         }
         else{
             running_.store(false);
-            return;
-
+        
         }   
-        Vec3 a_f = cur->calculateGuidance(missile_now, target_now, dt);
-        //유도탄 상태 업데이트
-        previous_loop_start_time_ = flight_time_now;
-        missile_mgr.updateState(missile_now, a_f, flight_time_now);
         
+        if(running_.load() == true) {
+            Vec3 a_f = cur->calculateGuidance(missile_now, target_now, dt);
+            //유도탄 상태 업데이트
+            previous_loop_start_time_ = flight_time_now;
+            missile_mgr.updateState(missile_now, a_f, flight_time_now);  
+            //일정 주기 sleep
+            std::this_thread::sleep_until(Clock::now() + 200ms);
+        }
+        else {
+            missile_mgr.updateState(missile_now, {0,0,0}, flight_time_now); //종료 상태여도 종료 시점 상태 업데이트하고 GuidanceTask return 
+            return;
+        } 
         
-        //일정 주기 sleep
-        //if(running == false) 면 pass -> 잠들지 않고 즉시 빠져나와야됨
-        std::this_thread::sleep_until(Clock::now() + 200ms);
+    
     }
 
 }

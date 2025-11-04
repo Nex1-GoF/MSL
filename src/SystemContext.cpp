@@ -5,7 +5,7 @@ SystemContext::SystemContext()
     :time_start_{}, //flight_time 기준 시각            
     msm_{},        
     tsm_{},    
-    guidance_controller_{msm_, tsm_, time_start_} // 4) 마지막: 참조 주입
+    guidance_controller_{msm_, tsm_, time_start_} // 마지막에 참조 주입
 {
    
 }
@@ -24,37 +24,54 @@ SystemContext::run() {
         finalizeAndReset_(); // 종료 절차 
     }
 }
-
+/*---------------------------------------------------------------------------------------*/
 void 
 SystemContext::toIdle_() {
-    //1.시스템 자원 초기화 
-    //2.소켓 설정
-    //3. ,,, 
+    //1.SystemContext 멤버 초기화 
+    //2.
+    //3.  
 }
 
 
 bool 
 SystemContext::runLaunchProcedure_() {
 
-    //1. 발사 절차 (핑퐁)  ()
+    //1. 발사 절차 (핑퐁)
+
+
     //2. 발사 명령 + 초기 포착 지점 수신 이벤트 
+
+
     //  "초기 포작 지점"과 "유도탄 초기 위치"(rm, 발사대 위치)로 유도탄 초기 방향(um) 계산
     Vec3 u_m_init = getInitialPIP_();
     msm_.setInitialState(u_m_init);
     //  SystemContext의 time_start_ 초기화 (시간 동기화용 -> real time을 flight time으로 변환할 때 기준 시각)
     time_start_ = Clock::now(); 
+    //유도 태스크 실행 객체의 기준 시간 초기화  
     guidance_controller_.setFlightStart(time_start_);
     return true;
 }
 
-void startInitialGuidance() {
-   
+void 
+SystemContext::startInitialGuidance() {
+   /*확정 x*/
+   while(true) {
+
+        TimePoint real_time_now = Clock::now();
+        double flight_time_now = std::chrono::duration_cast<Duration>(real_time_now - time_start_).count(); 
+        if(flight_time_now >= 5.0) {
+            msm_.updateForInitialGuidance(flight_time_now); //현재 시각 기준으로 msl 업데이트 
+            break;
+        }
+        /* 구현 x -100 ms 동안 sleep" */
+   }
+   return;
 }
 
 void 
 SystemContext::startDataLink_() {
     //1. 수신 스레드 start -> Receiver 객체에게 start() 메세지 전송 
-    //  receiver_.start();
+    
     //2. 수신 처리 스레드 start -> ReceiverProcessor 객체에게 start() 메세지 전송
     //  receive_processor_.start();
     //외부로부터 주기적으로 최신 표적 정보 수신받아 update 시작
@@ -62,23 +79,22 @@ SystemContext::startDataLink_() {
 }
 void 
 SystemContext::startGuidance_() {
-    //1. guidance controller 객체 초기 상태 MID로 초기화 
-    //2. 유도 태스크 start -> guindance controller 객체에 start() 메세지 전송
+    //유도 태스크 start -> guindance controller 객체에 start() 메세지 전송
     guidance_controller_.start();
 }
 
 void 
 SystemContext::waitMissionEnd_() {
-    //종료 이벤트 대기
+    //GuidanceTask 리턴 이벤트 대기,join() 함수는 GuidanceTask가 return하면 return
     guidance_controller_.join();
-    //종료 이벤트 발생하면 return
 }
 
 void 
 SystemContext::finalizeAndReset_() {
-    //종료 시점 유도탄 정보, flight time 전송 
+    //종료 시점 유도탄 정보, flight time 전송 (GuidanceController가 종료시점의 상태 업데이트 역할)
+    //여기서는 그냥 불러와서 전송만 
 }
-
+/*---------------------------------------------------------------------------------------*/
 
 Vec3
 SystemContext::getInitialPIP_() {

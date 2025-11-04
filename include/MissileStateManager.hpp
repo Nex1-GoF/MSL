@@ -25,4 +25,5 @@ public:
     missile_state_t getCurrentMissile(double time_now);
     void updateState(missile_state_t new_state, Vec3 new_a_f, double time_now);
     void setInitialState(Vec3);
+    void updateForInitialGuidance(double time_now);
 };
