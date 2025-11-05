@@ -28,4 +28,10 @@ inline Vec3  unit3 (const Vec3& v) {
 }
 inline double clamp(double x, double a, double b){
     return x < a ? a : (x > b ? b : x);
+
+
 }
+
+static inline double clip(double x, double a, double b) { return x < a ? a : (x > b ? b : x); }
+
+static inline double clip01(double x) { return clip(x, 0.0, 1.0); }
