@@ -1,10 +1,11 @@
 #include "SystemContext.hpp"
-
+#include <iostream>
 //생성자 구현 
 SystemContext::SystemContext()
     :time_start_{}, //flight_time 기준 시각            
     msm_{},        
     tsm_{},    
+    SimulationRunner_{tsm_},
     guidance_controller_{msm_, tsm_, time_start_} // 마지막에 참조 주입
 {
    
@@ -15,21 +16,21 @@ void
 SystemContext::run() {
     running_ = true;
     while(running_) { 
-        toIdle_(); //소켓등 시스템 자원 초기화
-        if(!runLaunchProcedure_()) continue; //발사 절차->중단 시 발사 대기 상태 재진입 
-        startInitialGuidance(); //초기 유도 수행
-        startDataLink_(); //통신 관련 태스크 실행 
-        startGuidance_(); //유도 태스크 실행 -> 상태관리, 전략 설정은 GuidanceContoller 가 담당 
-        waitMissionEnd_(); //종료 이벤트까지 대기 
-        finalizeAndReset_(); // 종료 절차 
+        // toIdle_(); //소켓등 시스템 자원 초기화
+        // if(!runLaunchProcedure_()) continue; //발사 절차->중단 시 발사 대기 상태 재진입 
+        // startInitialGuidance(); //초기 유도 수행
+        // startDataLink_(); //통신 관련 태스크 실행 
+        // startGuidance_(); //유도 태스크 실행 -> 상태관리, 전략 설정은 GuidanceContoller 가 담당 
+        // waitMissionEnd_(); //종료 이벤트까지 대기 
+        // finalizeAndReset_(); // 종료 절차 
+
+
+         runSimulation_();
     }
 }
 /*---------------------------------------------------------------------------------------*/
 void 
 SystemContext::toIdle_() {
-    //1.SystemContext 멤버 초기화 
-    //2.
-    //3.  
 }
 
 
@@ -61,7 +62,7 @@ SystemContext::startInitialGuidance() {
         double flight_time_now = std::chrono::duration_cast<Duration>(real_time_now - time_start_).count(); 
         if(flight_time_now >= 5.0) {
             msm_.updateForInitialGuidance(flight_time_now); //현재 시각 기준으로 msl 업데이트 
-            break;
+            break; 
         }
         /* 구현 x -100 ms 동안 sleep" */
    }
@@ -100,4 +101,28 @@ Vec3
 SystemContext::getInitialPIP_() {
     //수신한 초기 표적 정보, 유도탄 초기 위치로 u_m_initial 계산 후 return  
    
+}
+
+
+void 
+SystemContext::runSimulation_() {
+    //표적 초기 상태 설정 
+    Vec3 r_t_initial = {12000.0, 12000.0, 22000.0}; //초기 위치 (0초에서의 위치)
+    Vec3 v_t_initial = {-600.0, -600.0, 0}; //등속 
+    tsm_.updateState(r_t_initial, v_t_initial, 0);
+    //wait to start 
+    std::string s;
+    std::cout << "Press any key to start" << std::endl;
+    std::cin >> s; 
+    //유도 시작 -> flight time 설정 
+    time_start_ = Clock::now(); 
+    guidance_controller_.setFlightStart(time_start_);
+    
+    //타겟 갱신 시작 
+    SimulationRunner_.StartSimulation(time_start_);
+    //유도 루프 시작 
+    guidance_controller_.start();
+    guidance_controller_.join();
+
+    std::cout << "유도 종료" << std::endl;
 }

@@ -9,6 +9,7 @@
 #include <atomic>
 #include <chrono>
 #include <memory>
+#include <iostream>
 
 enum class GuidanceMode { Mid, Terminal, Ended };
 

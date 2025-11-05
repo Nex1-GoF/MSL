@@ -4,6 +4,7 @@
 #include "TargetStateManager.hpp"
 #include "GuidanceController.hpp"
 #include "Utils.hpp"
+#include "SimulationRunner.hpp"
 #include <thread>
 #include <atomic>
 #include <chrono>
@@ -21,9 +22,8 @@ private:
     //데이터 
     MissileStateManager msm_;
     TargetStateManager tsm_;
-    //통신부(구현 x)
-    //Receiver receiver_; 
-    //Receiver receive_processor_;
+    //통신부
+    SimulationRunner SimulationRunner_;
     //유도부 
     GuidanceController guidance_controller_;
     
@@ -37,7 +37,7 @@ private:
     void startGuidance_(); //유도 태스크 실행 
     void waitMissionEnd_(); //종료 상태까지 대기(blocking)
     void finalizeAndReset_(); //종료 절차 
-    
+    void runSimulation_();
     //스레드 관련 
     std::atomic<bool> running_{false};
 };

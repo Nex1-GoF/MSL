@@ -1,6 +1,7 @@
 //GuidanceController.cpp
 #include "GuidanceController.hpp"
-#include "IGuidance.hpp"
+#include "IGuidance.hpp"\
+
 //#include "MidtermGuidance.hpp"
 //#include "TerminalGuidance.hpp"
 
@@ -34,6 +35,17 @@ GuidanceController::GuidanceTask() {
         double dt = flight_time_now - previous_loop_start_time_;
         missile_state_t missile_now = missile_mgr.getCurrentMissile(flight_time_now);
         target_state_t target_now = target_mgr.getCurrentTarget(flight_time_now);
+        
+        //log
+        Vec3 R = sub3(target_now.r_t, missile_now.r_m);         
+        double Rmag= norm3(R) + 1e-12; 
+        std::string cur_mode = "";
+        if(mode_ == GuidanceMode::Mid) cur_mode = "Mid";
+        else if(mode_ == GuidanceMode::Terminal) cur_mode = "Terminal";
+        else cur_mode = "Ended";
+        std::cout << "time: " << flight_time_now <<" distance: " << Rmag << " mode: " << cur_mode << " [x: " << missile_now.r_m[0] << " y: " <<missile_now.r_m[1] <<" z: " << missile_now.r_m[2] << "]" << std::endl;
+
+       
         //모드 확인과 변경 
         checkAndUpdateStrategy(missile_now, target_now);
         //
@@ -71,6 +83,7 @@ GuidanceController::GuidanceTask() {
  GuidanceController::checkAndUpdateStrategy(missile_state_t missile_now, target_state_t target_now) {
     Vec3 R = sub3(target_now.r_t, missile_now.r_m);         
     double Rmag= norm3(R) + 1e-12; // time_now 에서 유도탄과 표적의 거리 
+    
     std::lock_guard<std::mutex> lock(mtx_);
     switch(mode_){
         // Mid -> Terminal 
@@ -81,7 +94,7 @@ GuidanceController::GuidanceTask() {
             break;
         // Terminal -> End
         case GuidanceMode::Terminal:
-            if(Rmag <= 10.0){
+            if(Rmag <= 50.0){
                 mode_ = GuidanceMode::Ended;
             }
             break;
