@@ -48,7 +48,7 @@ public:
     void setFlightStart(TimePoint tp);
     void setLink();
     //GuidanceTask 관리 
-    void start();  
-    void stop();
+    void startGuidanceTask();  
+    void stopGuidanceTask();
     void join();
 };
