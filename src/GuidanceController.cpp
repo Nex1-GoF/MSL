@@ -8,14 +8,14 @@
 
 //전송 by SystemContext
 void
-GuidanceController::start() {
+GuidanceController::startGuidanceTask() {
  if (running_.exchange(true)) return;
  worker_ = std::thread(&GuidanceController::GuidanceTask, this);
 }
 
 //전송 by SystemContext
 void
-GuidanceController::stop() {
+GuidanceController::stopGuidanceTask() {
  if (!running_.exchange(false)) return;
  if (worker_.joinable()) worker_.join();
 } 

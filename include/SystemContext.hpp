@@ -5,6 +5,7 @@
 #include "GuidanceController.hpp"
 #include "Utils.hpp"
 #include "SimulationRunner.hpp"
+#include "DataLinkManager.hpp"
 #include <thread>
 #include <atomic>
 #include <chrono>
@@ -23,7 +24,8 @@ private:
     MissileStateManager msm_;
     TargetStateManager tsm_;
     //통신부
-    SimulationRunner SimulationRunner_;
+    SimulationRunner simulation_runner_;
+    DataLinkManager datalink_manager_;
     //유도부 
     GuidanceController guidance_controller_;
     
