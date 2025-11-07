@@ -6,7 +6,7 @@
 #include <vector>
 #include <string>
 
-constexpr size_t MSL_INFO_BODY_SIZE = 20;
+constexpr size_t MSL_INFO_BODY_SIZE = 30;
 constexpr size_t MSL_INFO_PACKET_SIZE = HEADER_PACKET_SIZE + MSL_INFO_BODY_SIZE;
 
 class MslInfoPacket {

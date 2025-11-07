@@ -24,9 +24,9 @@ SystemContext::run() {
         std::cout << "enter any key: " << std::endl;
         std::cin >> start_cmd;
         startDataLink_(); //통신 관련 태스크 실행 
-        startGuidance_(); //유도 태스크 실행 -> 상태관리, 전략 설정은 GuidanceContoller 가 담당 
-        waitMissionEnd_(); //종료 이벤트까지 대기 
-        finalizeAndReset_(); // 종료 절차 
+        //startGuidance_(); //유도 태스크 실행 -> 상태관리, 전략 설정은 GuidanceContoller 가 담당 
+        //waitMissionEnd_(); //종료 이벤트까지 대기 
+        //finalizeAndReset_(); // 종료 절차 
     //runSimulation_();
     }
 }
@@ -88,6 +88,8 @@ void
 SystemContext::startDataLink_() {
     datalink_manager_.setDataLink();
     datalink_manager_.startDataLink();
+    std::cout << "start datalink(wait...)" << std::endl;
+    datalink_manager_.joinDataLink();
     return;
 }
 void 

@@ -47,7 +47,7 @@ void DataLinkManager::setDataLink()
         }
         fds_[cfg.role] = fd; // {role, fd} 맵에 저장
     }
-    tx_fd_ = fds_["tx"]; // 송신 전용 소켓 fd 따로 관리
+    tx_fd_ = fds_.at("tx"); // 송신 전용 소켓 fd 따로 관리
 }
 
 void DataLinkManager::startDataLink()
@@ -78,6 +78,11 @@ void DataLinkManager::stopDataLink()
         datalink_worker_.join();
     if (command_worker_.joinable())
         command_worker_.join();
+}
+
+void DataLinkManager::joinDataLink()
+{
+     if (datalink_worker_.joinable()) datalink_worker_.join();
 }
 
 // 업링크/다운링크 처리 태스크
