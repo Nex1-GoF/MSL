@@ -5,11 +5,13 @@
 #include <vector>
 #include <iostream>
 #include <cstring>
+constexpr size_t HEADER_PACKET_SIZE = 13;
 
 class HeaderPacket {
 public:
-    static constexpr size_t SIZE = 13;
-
+    
+    
+    HeaderPacket() = default;
     HeaderPacket(const char* s_id, const char* d_id, uint32_t s, uint8_t size);
 
     std::vector<uint8_t> serialize() const;

@@ -11,21 +11,23 @@ SystemContext::SystemContext()
     guidance_controller_{msm_, tsm_, time_start_} 
 { }
 ;
+
 //메인 스레드 
 void
 SystemContext::run() {
     running_ = true;
     while(running_) { 
-        toIdle_(); //소켓등 시스템 자원 초기화
-        if(!runLaunchProcedure_()) continue; //발사 절차->중단 시 발사 대기 상태 재진입 
-        startInitialGuidance(); //초기 유도 수행
+        //toIdle_(); //소켓등 시스템 자원 초기화
+        //if(!runLaunchProcedure_()) continue; //발사 절차->중단 시 발사 대기 상태 재진입 
+        //startInitialGuidance(); //초기 유도 수행
+        std::string start_cmd;
+        std::cout << "enter any key: " << std::endl;
+        std::cin >> start_cmd;
         startDataLink_(); //통신 관련 태스크 실행 
         startGuidance_(); //유도 태스크 실행 -> 상태관리, 전략 설정은 GuidanceContoller 가 담당 
         waitMissionEnd_(); //종료 이벤트까지 대기 
         finalizeAndReset_(); // 종료 절차 
-
-
-        //runSimulation_();
+    //runSimulation_();
     }
 }
 /*---------------------------------------------------------------------------------------*/
@@ -36,30 +38,33 @@ SystemContext::toIdle_() {
 }
 
 
-bool 
-SystemContext::runLaunchProcedure_() {
-    //0. wait 
-    //1. 발사 절차 (핑퐁)
+// bool 
+// SystemContext::runLaunchProcedure_() {
+//     //0. wait 
 
-    /*
-        구현 예정 
-    */
-
-    //2. 발사 명령 + 초기 포착 지점 수신 이벤트 
-    /*
-        구현 예정 
-    */
+//     //1. 발사 절차 (핑퐁)
+    
 
 
-    //  "초기 포작 지점"과 "유도탄 초기 위치"(rm, 발사대 위치)로 유도탄 초기 방향(um) 계산(등속 직선 운동을 위해)
-    Vec3 u_m_init = getInitialPIP_();
-    msm_.setInitialState(u_m_init);
-    //  SystemContext의 time_start_ 초기화 (시간 동기화용 -> real time을 flight time으로 변환할 때 기준 시각)
-    time_start_ = Clock::now(); 
-    //유도 태스크 실행 객체의 기준 시간 초기화  
-    guidance_controller_.setFlightStart(time_start_);
-    return true;
-}
+//     /*
+//         구현 예정 
+//     */
+
+//     //2. 발사 명령 + 초기 포착 지점 수신 이벤트 
+//     /*
+//         구현 예정 
+//     */
+
+
+//     //  "초기 포작 지점"과 "유도탄 초기 위치"(rm, 발사대 위치)로 유도탄 초기 방향(um) 계산(등속 직선 운동을 위해)
+//     Vec3 u_m_init = getInitialPIP_();
+//     msm_.setInitialState(u_m_init);
+//     //  SystemContext의 time_start_ 초기화 (시간 동기화용 -> real time을 flight time으로 변환할 때 기준 시각)
+//     time_start_ = Clock::now(); 
+//     //유도 태스크 실행 객체의 기준 시간 초기화  
+//     guidance_controller_.setFlightStart(time_start_);
+//     return true;
+// }
 
 void 
 SystemContext::startInitialGuidance() {
@@ -87,8 +92,9 @@ SystemContext::startDataLink_() {
 }
 void 
 SystemContext::startGuidance_() {
-    //유도 태스크 start -> guindance controller 객체에 start() 메세지 전송
+    //유도 태스크 start 
     guidance_controller_.startGuidanceTask();
+    return;
 }
 
 void 
@@ -96,6 +102,7 @@ SystemContext::waitMissionEnd_() {
     //GuidanceTask 리턴 이벤트 대기,join() 함수는 GuidanceTask가 return하면 return
     guidance_controller_.join(); //유도 태스크 종료 대기  
     datalink_manager_.stopDataLink(); // 데이터링크 태스크 종료 
+    return;
 }
 
 void 

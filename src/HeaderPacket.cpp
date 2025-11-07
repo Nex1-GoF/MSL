@@ -12,7 +12,7 @@ HeaderPacket::HeaderPacket(const char* s_id, const char* d_id, uint32_t s, uint8
 }
 
 std::vector<uint8_t> HeaderPacket::serialize() const {
-    std::vector<uint8_t> buffer(SIZE);
+    std::vector<uint8_t> buffer(HEADER_PACKET_SIZE);
     std::memcpy(&buffer[0], src_id, 4);
     std::memcpy(&buffer[4], dest_id, 4);
     buffer[8] = (seq >> 24) & 0xFF;
@@ -24,7 +24,7 @@ std::vector<uint8_t> HeaderPacket::serialize() const {
 }
 
 HeaderPacket HeaderPacket::deserialize(const std::vector<uint8_t>& buffer) {
-    if (buffer.size() < SIZE) {
+    if (buffer.size() < HEADER_PACKET_SIZE) {
         throw std::invalid_argument("Buffer too small for HeaderPacket");
     }
 

@@ -11,6 +11,8 @@ struct missile_state_t {
     double V_m = 1000.0;  //속력
     double last_update_time{0}; //flight_time 기준 시간 
     Vec3 a_f_{0,0,0};           // [m/s^2] 실제(응답/포화 후) 가속
+    char f_status{1};
+    char t_status{1};
 };
 
 
