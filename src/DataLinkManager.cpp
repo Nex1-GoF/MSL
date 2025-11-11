@@ -115,8 +115,8 @@ void DataLinkManager::DataLinkTask()
             /*----------로깅용---------- */
             pkt.print();
             /*----------로깅용---------- */
-            target_state_t received_tg = pkt.getTargetState();
-            tsm_.updateState(received_tg.r_t, received_tg.v_t, received_tg.t);
+            // target_state_t received_tg = pkt.getTargetState();
+            // tsm_.updateState(received_tg.r_t, received_tg.v_t, received_tg.t);
 
             /* 2. 다운링크 전송(최신 유도탄 정보) */
             missile_state_t msl_to_send = msm_.getMissileState();
