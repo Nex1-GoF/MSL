@@ -130,14 +130,18 @@ void DataLinkManager::DataLinkTask()
             /* 2. 다운링크 전송(최신 유도탄 정보) */
             missile_state_t msl_to_send = msm_.getMissileState();
             Vec3 r_m = msl_to_send.r_m;
-            
+            Vec3 u_m = msl_to_send.u_m;
+            double Vm = msl_to_send.V_m;
+            Vec3 pip = msl_to_send.pip;
             //(1) 헤더 생성
-            HeaderPacket header(s_id_, d_id_, 0, MSL_INFO_PACKET_SIZE);
+            HeaderPacket hdr(s_id_, d_id_, 0, MSL_INFO_PACKET_SIZE);
             
             //(2) serialize (임시)
-            MslInfoPacket mpk(header, doubleToI32(r_m[0]), doubleToI32(r_m[1]),doubleToI32(r_m[2]),
-                                0, 0, 0,
-                        doubleToI32(msl_to_send.last_update_time), msl_to_send.f_status, msl_to_send.t_status);
+            MslInfoPacket mpk(hdr, 
+                            doubleToI32(r_m[0]), doubleToI32(r_m[1]),doubleToI16(r_m[2]),
+                            doubleToI32(Vm*u_m[0]), doubleToI32(Vm*u_m[1]), doubleToI16(Vm*u_m[2]),
+                            doubleToI32(pip[0]),doubleToI32(pip[1]),doubleToI16(pip[2]),
+                            doubleToI32(msl_to_send.last_update_time), msl_to_send.f_status, msl_to_send.t_status);
             
             /*----------로깅용---------- */
             mpk.print();
@@ -190,9 +194,13 @@ void DataLinkManager::CommandTask()
         int recvsize = recvfrom(curfd, buffer, MAXLINE, 0, (sockaddr *)&clientAddr, &len);
         if (recvsize > 0)
         {
+            std::cout << "[비상 폭파 명령 수신]" << std::endl;
             /*수신 즉시 비상 폭파 명령 처리 (패킷 깔 필요 x)*/
-            // (1). 종료 로그 저장 msm_.updateAFinalLog()
-            // (2)  stopDataLink , stopGuidanceTask
+            // (1). 종료 시점 상태 저장 
+            double flight_time_now = getFlightTimeNow();
+            missile_state_t final_msl_state = msm_.getCurrentMissile(flight_time_now); //현재 시간에 대한 미사일 정보 가져오기
+            msm_.updateState(final_msl_state,{0,0,0},{0,0,0}, flight_time_now, 5); //업데이트 
+            // (2) stopDataLink , stopGuidanceTask
             if (termination_callback_) termination_callback_(); // TaskManager.stop() 호출 -> 모든 태스크 종료(guidance, datalink, cmd) 
 
         }
@@ -212,4 +220,15 @@ void DataLinkManager::CommandTask()
             }
         }
     }
+}
+
+
+
+
+ //현재 시각 찍고 filght time(double)으로 변환 후 반환 
+ double 
+ DataLinkManager::getFlightTimeNow() {
+    TimePoint real_time_now = Clock::now();
+    double flight_time_now = std::chrono::duration_cast<Duration>(real_time_now - flight_time_).count(); 
+    return flight_time_now;
 }

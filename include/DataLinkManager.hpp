@@ -26,8 +26,8 @@ struct SocketConfig {
 
 class DataLinkManager {
 public:
-    DataLinkManager(TargetStateManager& tsm, MissileStateManager & msm)
-    :tsm_(tsm), msm_(msm)
+    DataLinkManager(TargetStateManager& tsm, MissileStateManager & msm, TimePoint flight_time)
+    :tsm_(tsm), msm_(msm), flight_time_(flight_time)
     {};
 
     ~DataLinkManager();
@@ -42,9 +42,11 @@ public:
     //스레드 (태스크) 함수
     void DataLinkTask(); //업링크->다운링크 
     void CommandTask();  //비상 폭파 명령 수신, 처리 
+    double getFlightTimeNow();
 private:
     TargetStateManager& tsm_;
     MissileStateManager& msm_;
+    TimePoint flight_time_{}; //발사 시작 시간(절대 시간)
     //콜백 관련 
     Callback termination_callback_;
     //스레드 관련 

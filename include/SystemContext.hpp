@@ -14,6 +14,7 @@
 #include <atomic>
 #include <chrono>
 #include <memory>
+#include <cstdint>
 
 
 class SystemContext {
@@ -38,7 +39,7 @@ private:
     //기능 
     void toIdle_(); //초기화 절차 
     bool runLaunchProcedure_(); //발사 준비 절차 
-    Vec3 getInitialPIP_(); //초기 PIP 계산 
+    Vec3 getInitialPIP_(int32_t, int32_t, int32_t); //초기 PIP 계산 
     void startInitialGuidance(); //초기 유도 
     void startGuidance_(); //유도 태스크 실행 
     void waitMissionEnd_(); //종료 상태까지 대기(blocking)

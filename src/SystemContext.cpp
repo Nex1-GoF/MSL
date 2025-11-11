@@ -7,7 +7,7 @@ SystemContext::SystemContext()
       msm_{},
       tsm_{},
       simulation_runner_{tsm_},
-      datalink_manager_{tsm_, msm_},
+      datalink_manager_{tsm_, msm_, time_start_},
       guidance_controller_{msm_, tsm_, time_start_},
       task_manager_{guidance_controller_, datalink_manager_} {};
 
@@ -17,15 +17,15 @@ void SystemContext::run()
     running_ = true;
     while (running_)
     {
-        std::cout << "wati to launch" << '\n';
+        std::cout << "[발사 절차 명령 대기중]" <<  std::endl;
         toIdle_(); // 소켓등 시스템 자원 초기화
         if (!runLaunchProcedure_())
             continue;           // 발사 절차->중단 시 발사 대기 상태 재진입
-        //startInitialGuidance(); // 초기 유도 수행
-        //startGuidance_();       // 유도 태스크 실행 -> 상태관리, 전략 설정은 GuidanceContoller 가 담당
-       // waitMissionEnd_();      // 종료 이벤트까지 대기
-        //finalizeAndReset_();    // 종료 절차
-        // runSimulation_();
+        startInitialGuidance(); // 초기 유도 수행
+        startGuidance_();       // 유도 태스크 실행 -> 상태관리, 전략 설정은 GuidanceContoller 가 담당
+        waitMissionEnd_();      // 종료 이벤트까지 대기
+        finalizeAndReset_();    // 종료 절차
+        
     }
 }
 /*---------------------------------------------------------------------------------------*/
@@ -135,6 +135,7 @@ bool SystemContext::runLaunchProcedure_()
                 std::memset(key, 0, 32);
                 close(fd_rx_); fd_rx_ = -1;
                 close(fd_tx_); fd_tx_ = -1;
+                std::cout << "RX cur_seq=" << cur_seq << "\n";
                 return false;
             }
             else
@@ -168,28 +169,30 @@ bool SystemContext::runLaunchProcedure_()
         }
     }
 
-    // //"초기 포작 지점"과 "유도탄 초기 위치"(rm, 발사대 위치)로 유도탄 초기 방향(um) 계산(등속 직선 운동을 위해)
-    // Vec3 u_m_init = getInitialPIP_();
-    // msm_.setInitialState(u_m_init);
-    // //  SystemContext의 time_start_ 초기화 (시간 동기화용 -> real time을 flight time으로 변환할 때 기준 시각)
-    // time_start_ = Clock::now();
-    // // 유도 태스크 실행 객체의 기준 시간 초기화
-    // guidance_controller_.setFlightStart(time_start_);
-    std::cout << "complete launch procedure" << std::endl;
+    // "초기 포작 지점"과 "유도탄 초기 위치"(rm, 발사대 위치)로 유도탄 초기 방향(um) 계산(등속 직선 운동을 위해)
+    Vec3 u_m_init = getInitialPIP_(pip_x, pip_y, pip_z);
+    msm_.setInitialState(u_m_init);
+    // SystemContext의 time_start_ 초기화 (시간 동기화용 -> real time을 flight time으로 변환할 때 기준 시각)
+    time_start_ = Clock::now();
+    // 유도 태스크 실행 객체의 기준 시간 초기화
+    guidance_controller_.setFlightStart(time_start_);
+    std::cout << "[발사 절차 및 초기 설정 완료]" << std::endl;
     return true;
 }
 
 void SystemContext::startInitialGuidance()
 {
+    std::cout << "[초기 유도 진입]" << std::endl;
+    msm_.setFlightSatate(2); // flight state 를 초기 유도로 설정
     /*확정 x*/
     while (true)
     {
-
+        
         TimePoint real_time_now = Clock::now();
         double flight_time_now = std::chrono::duration_cast<Duration>(real_time_now - time_start_).count();
         if (flight_time_now >= 5.0)
         {
-            msm_.updateForInitialGuidance(flight_time_now); // 현재 시각 기준으로 msl 업데이트 (등속직선운동 용)
+            msm_.updateForInitialGuidance(flight_time_now); // 현재 시각 기준으로 msl 업데이트 (등속 운동)
             break;
         }
         /* 구현 x -100 ms 동안 sleep" */
@@ -201,16 +204,18 @@ void SystemContext::startInitialGuidance()
 
 void SystemContext::startGuidance_()
 {
+    std::cout << "[중기 유도 진입, 데이터 링크 활성화]" << std::endl;
+    msm_.setFlightSatate(3); // flight state 를 초기 유도로 설정
     task_manager_.start(); // 모든 태스크 한꺼번에 실행 (유도, 데이터링크, 비상 폭파 명령 수신)
-    std::cout << "start datalink(wait...)" << std::endl;
-
+    
     return;
 }
 
 void SystemContext::waitMissionEnd_()
 {
-
+   
     task_manager_.join(); // 종료이벤트 발생까지 대기
+    std::cout << "[유도 태스크 종료, 데이터링크 비활성화]" << std::endl;
     return;
 }
 
@@ -218,16 +223,25 @@ void SystemContext::finalizeAndReset_()
 {
     // 종료 시점 유도탄 정보, flight time 전송 (GuidanceController가 종료시점의 상태 업데이트 역할)
     // 여기서는 그냥 불러와서 전송만
-    /*통신부 완료 후 구현 예정 */
+    
+    std::cout << "[종료 상태 다운링크 전송 완료]" << std::endl;
 }
 /*---------------------------------------------------------------------------------------*/
-/*
-Vec3
-SystemContext::getInitialPIP_() {
-    //수신한 초기 표적 정보, 유도탄 초기 위치로 u_m_initial 계산 후 return
 
+Vec3
+SystemContext::getInitialPIP_(int32_t pip_x, int32_t pip_y, int32_t pip_z) {
+    //수신한 초기 표적 정보, 유도탄 초기 위치(0,0,0) 로 u_m_initial 계산 후 return
+    const double x = i32ToDouble(pip_x);
+    const double y = i32ToDouble(pip_y);
+    const double z = i32ToDouble(pip_z);
+
+    const double n = std::sqrt(x*x + y*y + z*z);
+    if (n < 1e-9) {
+        return Vec3{0.0, 0.0, 0.0};
+    }
+    return Vec3{ x / n, y / n, z / n };
 }
-*/
+
 void SystemContext::runSimulation_()
 {
     // 표적 초기 상태 설정

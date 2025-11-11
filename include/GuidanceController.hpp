@@ -31,6 +31,8 @@ private:
     IGuidance* strategy_{mid_.get()}; // 현재 선택된 전략(비소유), 초기값->mid
     //스레드 관련  
     std::atomic<bool> running_{false};
+    std::atomic<bool> mid_to_term{false};
+    std::atomic<bool> term_to_end{false};
     std::thread worker_;
     //유도 태스크 관련
     double previous_loop_start_time_ = 0.0; //이전 루프 진입 시간 -> dt 계산에 필요
@@ -42,14 +44,16 @@ private:
     void GuidanceTask(); //유도 태스크 
     void checkAndUpdateStrategy(missile_state_t, target_state_t);
     double getFlightTimeNow();
+   
 
 public:
     //생성자 
     GuidanceController(MissileStateManager& msm, TargetStateManager& tm, TimePoint flight_time)
         : missile_mgr(msm), target_mgr(tm), flight_time_(flight_time) {};
-     void setTerminationCallback(Callback cb);
+    void setTerminationCallback(Callback cb);
     void setMode(GuidanceMode m);
     void setFlightStart(TimePoint tp);
+    Vec3 getCurrentPIP(const missile_state_t& m, const target_state_t& t) const;
     void setLink();
     //GuidanceTask 관리 
     void startGuidanceTask();  
