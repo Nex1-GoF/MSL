@@ -122,10 +122,15 @@ void DataLinkManager::DataLinkTask()
             /*----------로깅용---------- */
             pkt.print();
             /*----------로깅용---------- */
+<<<<<<< HEAD
+            // target_state_t received_tg = pkt.getTargetState();
+            // tsm_.updateState(received_tg.r_t, received_tg.v_t, received_tg.t);
+=======
             // (2) target_state_t  load
             target_state_t received_tg = pkt.getTargetState();
             // (3) update 
             tsm_.updateState(received_tg.r_t, received_tg.v_t, received_tg.t);
+>>>>>>> main
 
             /* 2. 다운링크 전송(최신 유도탄 정보) */
             missile_state_t msl_to_send = msm_.getMissileState();
@@ -136,12 +141,31 @@ void DataLinkManager::DataLinkTask()
             //(1) 헤더 생성
             HeaderPacket hdr(s_id_, d_id_, 0, MSL_INFO_PACKET_SIZE);
             
+<<<<<<< HEAD
+            // 헤더 생성
+            HeaderPacket header(s_id_, d_id_, 0, MSL_INFO_PACKET_SIZE);
+            
+            // serialize (임시)
+            // MslInfoPacket mpk(header, doubleToI32(r_m[0]), doubleToI32(r_m[1]),doubleToI32(r_m[2]),
+            //                     0, 0, 0,
+            //             doubleToI32(msl_to_send.last_update_time), msl_to_send.f_status, msl_to_send.t_status);
+
+            MslInfoPacket mpk( header,
+                               static_cast<int32_t>(r_m[0]), static_cast<int32_t>(r_m[1]), static_cast<int16_t>(r_m[2]),
+                               0, 0, 0,
+                               0, 0, 0,
+                               static_cast<uint32_t>(msl_to_send.last_update_time),
+                               msl_to_send.f_status,
+                               static_cast<uint8_t>(msl_to_send.t_status)
+                             );
+=======
             //(2) serialize (임시)
             MslInfoPacket mpk(hdr, 
                             doubleToI32(r_m[0]), doubleToI32(r_m[1]),doubleToI16(r_m[2]),
                             doubleToI32(Vm*u_m[0]), doubleToI32(Vm*u_m[1]), doubleToI16(Vm*u_m[2]),
                             doubleToI32(pip[0]),doubleToI32(pip[1]),doubleToI16(pip[2]),
                             doubleToI32(msl_to_send.last_update_time), msl_to_send.f_status, msl_to_send.t_status);
+>>>>>>> main
             
             /*----------로깅용---------- */
             mpk.print();
@@ -194,6 +218,10 @@ void DataLinkManager::CommandTask()
         int recvsize = recvfrom(curfd, buffer, MAXLINE, 0, (sockaddr *)&clientAddr, &len);
         if (recvsize > 0)
         {
+<<<<<<< HEAD
+            /*수신 즉시 비상 폭파 명령 처리 */
+            std::cout << "Emergency command received! Initiating self-destruct sequence.\n";
+=======
             std::cout << "[비상 폭파 명령 수신]" << std::endl;
             /*수신 즉시 비상 폭파 명령 처리 (패킷 깔 필요 x)*/
             // (1). 종료 시점 상태 저장 
@@ -202,6 +230,7 @@ void DataLinkManager::CommandTask()
             msm_.updateState(final_msl_state,{0,0,0},{0,0,0}, flight_time_now, 5); //업데이트 
             // (2) stopDataLink , stopGuidanceTask
             if (termination_callback_) termination_callback_(); // TaskManager.stop() 호출 -> 모든 태스크 종료(guidance, datalink, cmd) 
+>>>>>>> main
 
         }
         else if (recvsize == 0)

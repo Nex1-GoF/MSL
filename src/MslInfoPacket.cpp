@@ -79,4 +79,5 @@ void MslInfoPacket::print() const {
 }
 
 const HeaderPacket& MslInfoPacket::getHeader() const {
-    return header;}
+    return header;
+}
