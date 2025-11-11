@@ -126,9 +126,18 @@ void DataLinkManager::DataLinkTask()
             HeaderPacket header(s_id_, d_id_, 0, MSL_INFO_PACKET_SIZE);
             
             // serialize (임시)
-            MslInfoPacket mpk(header, doubleToI32(r_m[0]), doubleToI32(r_m[1]),doubleToI32(r_m[2]),
-                                0, 0, 0,
-                        doubleToI32(msl_to_send.last_update_time), msl_to_send.f_status, msl_to_send.t_status);
+            // MslInfoPacket mpk(header, doubleToI32(r_m[0]), doubleToI32(r_m[1]),doubleToI32(r_m[2]),
+            //                     0, 0, 0,
+            //             doubleToI32(msl_to_send.last_update_time), msl_to_send.f_status, msl_to_send.t_status);
+
+            MslInfoPacket mpk( header,
+                               static_cast<int32_t>(r_m[0]), static_cast<int32_t>(r_m[1]), static_cast<int16_t>(r_m[2]),
+                               0, 0, 0,
+                               0, 0, 0,
+                               static_cast<uint32_t>(msl_to_send.last_update_time),
+                               msl_to_send.f_status,
+                               static_cast<uint8_t>(msl_to_send.t_status)
+                             );
             
             /*----------로깅용---------- */
             mpk.print();

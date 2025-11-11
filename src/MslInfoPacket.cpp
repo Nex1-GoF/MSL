@@ -3,131 +3,81 @@
 #include <cstring>
 #include <stdexcept>
 
-namespace {
-    // 새 멤버 레이아웃 기준 바디 크기(바이트)
-    constexpr size_t kBodySizeExpected = 
-        sizeof(int32_t) * 6  // msl_x, msl_y, msl_z, pip_x, pip_y, pip_z
-      + sizeof(uint32_t)     // flight_time
-      + sizeof(char)         // flight_status
-      + sizeof(char);        // telemetry_status
-
-    // 필드별 오프셋(HEADER 뒤가 아니라 BODY 시작 기준)
-    constexpr size_t OFF_MSL_X   = 0;
-    constexpr size_t OFF_MSL_Y   = OFF_MSL_X   + sizeof(int32_t);
-    constexpr size_t OFF_MSL_Z   = OFF_MSL_Y   + sizeof(int32_t);
-    constexpr size_t OFF_PIP_X   = OFF_MSL_Z   + sizeof(int32_t);
-    constexpr size_t OFF_PIP_Y   = OFF_PIP_X   + sizeof(int32_t);
-    constexpr size_t OFF_PIP_Z   = OFF_PIP_Y   + sizeof(int32_t);
-    constexpr size_t OFF_FTIME   = OFF_PIP_Z   + sizeof(int32_t);
-    constexpr size_t OFF_FSTAT   = OFF_FTIME   + sizeof(uint32_t);
-    constexpr size_t OFF_TSTAT   = OFF_FSTAT   + sizeof(char);
-    constexpr size_t BODY_SIZE   = OFF_TSTAT   + sizeof(char); // = 30
-}
-
 MslInfoPacket::MslInfoPacket() = default;
 
 MslInfoPacket::MslInfoPacket(const HeaderPacket& hdr,
-                             int32_t msl_x, int32_t msl_y, int32_t msl_z,
-                             int32_t pip_x, int32_t pip_y, int32_t pip_z,
-                             uint32_t time, char f_status, char t_status)
-    : header_(hdr),
-      msl_x_(msl_x), msl_y_(msl_y), msl_z_(msl_z),
-      pip_x_(pip_x), pip_y_(pip_y), pip_z_(pip_z),
-      flight_time_(time),
-      flight_status_(f_status),
-      telemetry_status_(t_status) {}
+                             int32_t x, int32_t y, int16_t z,
+                             int32_t vx, int32_t vy, int16_t vz,
+                             int32_t pip_x, int32_t pip_y, int16_t pip_z,
+                             uint32_t time, char f_status, uint8_t t_status)
+    : header(hdr), pos_x(x), pos_y(y), pos_z(z),
+      vel_x(vx), vel_y(vy), vel_z(vz),
+      pip_x(pip_x), pip_y(pip_y), pip_z(pip_z),
+      flight_time(time),
+      flight_status(f_status), telemetry_status(t_status) {}
 
-/**
- * 직렬화 규칙 (Host endian 그대로 memcpy – 기존 규칙과 동일)
- * BODY(30B) = msl_x(4) msl_y(4) msl_z(4) pip_x(4) pip_y(4) pip_z(4)
- *             flight_time(4) flight_status(1) telemetry_status(1)
- */
 std::vector<uint8_t> MslInfoPacket::serialize() const {
-    // 안전: 헤더의 매크로와 실제 레이아웃이 불일치하면 경고/예외 유발
-    if (MSL_INFO_BODY_SIZE != kBodySizeExpected) {
-        // 개발 단계에서 빨리 드러나게 예외 처리
-        throw std::logic_error("MSL_INFO_BODY_SIZE mismatch: header says " 
-            + std::to_string(MSL_INFO_BODY_SIZE) + ", but layout needs " 
-            + std::to_string(kBodySizeExpected));
-    }
+    std::vector<uint8_t> buffer = header.serialize();
 
-    // 1) 헤더 직렬화
-    std::vector<uint8_t> buffer = header_.serialize();
+    std::vector<uint8_t> body(MSL_INFO_BODY_SIZE);
+    std::memcpy(&body[0],  &pos_x, sizeof(pos_x));
+    std::memcpy(&body[4],  &pos_y, sizeof(pos_y));
+    std::memcpy(&body[8],  &pos_z, sizeof(pos_z));
+    std::memcpy(&body[10], &vel_x, sizeof(vel_x));
+    std::memcpy(&body[14], &vel_y, sizeof(vel_y));
+    std::memcpy(&body[18], &vel_z, sizeof(vel_z));
+    std::memcpy(&body[20], &pip_x, sizeof(pip_x));
+    std::memcpy(&body[24], &pip_y, sizeof(pip_y));
+    std::memcpy(&body[28], &pip_z, sizeof(pip_z));
+    std::memcpy(&body[30], &flight_time, sizeof(flight_time));
+    body[34] = static_cast<uint8_t>(flight_status);
+    body[35] = telemetry_status;
 
-    // 2) 바디(30B) 직렬화
-    std::vector<uint8_t> body(BODY_SIZE);
-
-    std::memcpy(&body[OFF_MSL_X], &msl_x_, sizeof(msl_x_));
-    std::memcpy(&body[OFF_MSL_Y], &msl_y_, sizeof(msl_y_));
-    std::memcpy(&body[OFF_MSL_Z], &msl_z_, sizeof(msl_z_));
-
-    std::memcpy(&body[OFF_PIP_X], &pip_x_, sizeof(pip_x_));
-    std::memcpy(&body[OFF_PIP_Y], &pip_y_, sizeof(pip_y_));
-    std::memcpy(&body[OFF_PIP_Z], &pip_z_, sizeof(pip_z_));
-
-    std::memcpy(&body[OFF_FTIME], &flight_time_, sizeof(flight_time_));
-    body[OFF_FSTAT] = static_cast<uint8_t>(flight_status_);
-    body[OFF_TSTAT] = static_cast<uint8_t>(telemetry_status_);
-
-    // 3) 헤더 뒤에 바디 붙이기
-    buffer.insert(buffer.end(), body.begin(), body.end());
+    buffer.insert(buffer.end(), body.begin(), body.begin() + 36); // 총 36바이트 사용
     return buffer;
 }
 
 MslInfoPacket MslInfoPacket::deserialize(const std::vector<uint8_t>& buffer) {
-    // 안전: 헤더 매크로와 실제 레이아웃 불일치 시 조기 검출
-    if (MSL_INFO_BODY_SIZE != kBodySizeExpected) {
-        throw std::logic_error("MSL_INFO_BODY_SIZE mismatch: header says " 
-            + std::to_string(MSL_INFO_BODY_SIZE) + ", but layout needs " 
-            + std::to_string(kBodySizeExpected));
-    }
-
-    // 전체 길이 검사: HEAD + BODY(30)
-    const size_t need_min = HEADER_PACKET_SIZE + kBodySizeExpected;
-    if (buffer.size() < need_min)
+    if (buffer.size() < MSL_INFO_PACKET_SIZE)
         throw std::runtime_error("Buffer too small for MslInfoPacket");
 
-    // 1) 헤더 역직렬화
-    HeaderPacket hdr = HeaderPacket::deserialize(
-        { buffer.begin(), buffer.begin() + HEADER_PACKET_SIZE });
-
-    // 2) BODY 시작 위치
-    const size_t base = HEADER_PACKET_SIZE;
-
-    // 3) 바디 필드 추출
+    HeaderPacket hdr = HeaderPacket::deserialize({buffer.begin(), buffer.begin() + HEADER_PACKET_SIZE});
     MslInfoPacket pkt;
-    pkt.header_ = hdr;
+    pkt.header = hdr;
 
-    std::memcpy(&pkt.msl_x_, &buffer[base + OFF_MSL_X], sizeof(pkt.msl_x_));
-    std::memcpy(&pkt.msl_y_, &buffer[base + OFF_MSL_Y], sizeof(pkt.msl_y_));
-    std::memcpy(&pkt.msl_z_, &buffer[base + OFF_MSL_Z], sizeof(pkt.msl_z_));
-
-    std::memcpy(&pkt.pip_x_, &buffer[base + OFF_PIP_X], sizeof(pkt.pip_x_));
-    std::memcpy(&pkt.pip_y_, &buffer[base + OFF_PIP_Y], sizeof(pkt.pip_y_));
-    std::memcpy(&pkt.pip_z_, &buffer[base + OFF_PIP_Z], sizeof(pkt.pip_z_));
-
-    std::memcpy(&pkt.flight_time_, &buffer[base + OFF_FTIME], sizeof(pkt.flight_time_));
-    pkt.flight_status_    = static_cast<char>(buffer[base + OFF_FSTAT]);
-    pkt.telemetry_status_ = static_cast<char>(buffer[base + OFF_TSTAT]);
+    std::memcpy(&pkt.pos_x,  &buffer[HEADER_PACKET_SIZE + 0],  sizeof(pkt.pos_x));
+    std::memcpy(&pkt.pos_y,  &buffer[HEADER_PACKET_SIZE + 4],  sizeof(pkt.pos_y));
+    std::memcpy(&pkt.pos_z,  &buffer[HEADER_PACKET_SIZE + 8],  sizeof(pkt.pos_z));
+    std::memcpy(&pkt.vel_x,  &buffer[HEADER_PACKET_SIZE + 10], sizeof(pkt.vel_x));
+    std::memcpy(&pkt.vel_y,  &buffer[HEADER_PACKET_SIZE + 14], sizeof(pkt.vel_y));
+    std::memcpy(&pkt.vel_z,  &buffer[HEADER_PACKET_SIZE + 18], sizeof(pkt.vel_z));
+    std::memcpy(&pkt.pip_x,  &buffer[HEADER_PACKET_SIZE + 20], sizeof(pkt.pip_x));
+    std::memcpy(&pkt.pip_y,  &buffer[HEADER_PACKET_SIZE + 24], sizeof(pkt.pip_y));
+    std::memcpy(&pkt.pip_z,  &buffer[HEADER_PACKET_SIZE + 28], sizeof(pkt.pip_z));
+    std::memcpy(&pkt.flight_time, &buffer[HEADER_PACKET_SIZE + 30], sizeof(pkt.flight_time));
+    pkt.flight_status    = static_cast<char>(buffer[HEADER_PACKET_SIZE + 34]);
+    pkt.telemetry_status = buffer[HEADER_PACKET_SIZE + 35];
 
     return pkt;
 }
 
 void MslInfoPacket::print() const {
     std::cout << "[MslInfoPacket]\n";
-    header_.print();
-    std::cout
-        << "MSL(x=" << msl_x_
-        << ", y="   << msl_y_
-        << ", z="   << msl_z_ << ")\n"
-        << "PIP(x=" << pip_x_
-        << ", y="   << pip_y_
-        << ", z="   << pip_z_ << ")\n"
-        << "FlightTime=" << flight_time_ << " ms, "
-        << "Status="     << static_cast<int>(flight_status_) << ", "
-        << "Telemetry="  << static_cast<int>(telemetry_status_) << "\n";
+    header.print();
+    std::cout << "Position(X=" << pos_x
+              << ", Y=" << pos_y
+              << ", Z=" << pos_z << ")\n"
+              << "Velocity(Vx=" << vel_x
+              << ", Vy=" << vel_y
+              << ", Vz=" << vel_z << ")\n"
+              << "PIP(X=" << pip_x
+              << ", Y=" << pip_y
+              << ", Z=" << pip_z << ")\n"
+              << "FlightTime=" << flight_time << " ms, "
+              << "Status=" << static_cast<int>(flight_status)
+              << ", Telemetry=" << static_cast<int>(telemetry_status) << "\n";
 }
 
 const HeaderPacket& MslInfoPacket::getHeader() const {
-    return header_;
+    return header;
 }
