@@ -117,14 +117,14 @@ void DataLinkManager::DataLinkTask()
 
             /*1. 최신 타겟 정보 갱신 */
             // (1) deserialize
-            TgtInfoPacket pkt = TgtInfoPacket::deserialize(packetData);
+            TgtInfoPacket tpk = TgtInfoPacket::deserialize(packetData);
 
             /*----------로깅용---------- */
-            pkt.print();
+            tpk.print();
             /*----------로깅용---------- */
 
             // (2) target_state_t  load
-            target_state_t received_tg = pkt.getTargetState();
+            target_state_t received_tg = tpk.getTargetState();
             // (3) update 
             tsm_.updateState(received_tg.r_t, received_tg.v_t, received_tg.t);
 
@@ -143,10 +143,11 @@ void DataLinkManager::DataLinkTask()
                             doubleToI32(r_m[0]), doubleToI32(r_m[1]),doubleToI16(r_m[2]),
                             doubleToI32(Vm*u_m[0]), doubleToI32(Vm*u_m[1]), doubleToI16(Vm*u_m[2]),
                             doubleToI32(pip[0]),doubleToI32(pip[1]),doubleToI16(pip[2]),
-                            doubleToI32(msl_to_send.last_update_time), msl_to_send.f_status, msl_to_send.t_status);
+                            doubleToU32(msl_to_send.last_update_time), msl_to_send.f_status, msl_to_send.t_status);
             
             /*----------로깅용---------- */
             mpk.print();
+            std::cout << "[My mslInfo] flightime = " << msl_to_send.last_update_time << " X= " << r_m[0] << " y= " << r_m[1] << " z= " << r_m[2] << std::endl;
             /*----------로깅용---------- */
             std::vector<uint8_t> packet = mpk.serialize();
             
@@ -234,4 +235,9 @@ void DataLinkManager::CommandTask()
     TimePoint real_time_now = Clock::now();
     double flight_time_now = std::chrono::duration_cast<Duration>(real_time_now - flight_time_).count(); 
     return flight_time_now;
+}
+
+void 
+DataLinkManager::setFlightStart(TimePoint tp) {
+     flight_time_ = tp;
 }

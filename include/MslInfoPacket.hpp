@@ -34,7 +34,7 @@ private:
     uint8_t  telemetry_status;
 
 public:
-     MslInfoPacket();
+    MslInfoPacket();
     MslInfoPacket(const HeaderPacket& hdr,
                   int32_t x, int32_t y, int16_t z,
                   int32_t vx, int32_t vy, int16_t vz,

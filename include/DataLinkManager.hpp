@@ -43,6 +43,7 @@ public:
     void DataLinkTask(); //업링크->다운링크 
     void CommandTask();  //비상 폭파 명령 수신, 처리 
     double getFlightTimeNow();
+    void setFlightStart(TimePoint tp);
 private:
     TargetStateManager& tsm_;
     MissileStateManager& msm_;

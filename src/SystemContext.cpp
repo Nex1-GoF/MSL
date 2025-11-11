@@ -176,6 +176,7 @@ bool SystemContext::runLaunchProcedure_()
     time_start_ = Clock::now();
     // 유도 태스크 실행 객체의 기준 시간 초기화
     guidance_controller_.setFlightStart(time_start_);
+    datalink_manager_.setFlightStart(time_start_);
     std::cout << "[발사 절차 및 초기 설정 완료]" << std::endl;
     return true;
 }
