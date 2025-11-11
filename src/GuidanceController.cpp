@@ -1,9 +1,14 @@
 //GuidanceController.cpp
 #include "GuidanceController.hpp"
-#include "IGuidance.hpp"\
+#include "IGuidance.hpp"
 
 //#include "MidtermGuidance.hpp"
 //#include "TerminalGuidance.hpp"
+
+
+void GuidanceController::setTerminationCallback(Callback cb) {
+    termination_callback_ = cb;
+}
 
 
 //전송 by SystemContext
@@ -22,7 +27,7 @@ GuidanceController::stopGuidanceTask() {
 
 void 
 GuidanceController::join() {
-    if (worker_.joinable()) worker_.join();
+ if (worker_.joinable()) worker_.join();
 }
 
 //스레드 함수(유도 태스크) 
@@ -57,8 +62,8 @@ GuidanceController::GuidanceTask() {
             cur = term_.get();
         }
         else{
-            running_.store(false);
-        
+            //종료 이벤트 
+            if (termination_callback_) termination_callback_(); // TaskManager.stop() 호출 -> 모든 태스크 종료(guidance, datalink, cmd) 
         }   
         
         if(running_.load() == true) {

@@ -10,6 +10,7 @@
 #include <chrono>
 #include <memory>
 #include <iostream>
+#include <functional>
 
 enum class GuidanceMode { Mid, Terminal, Ended };
 
@@ -27,13 +28,16 @@ private:
     //전략 캐시 ->멤버 변수로 만들어두고 재사용
     std::unique_ptr<IGuidance> mid_ = std::make_unique<MidtermGuidance>();
     std::unique_ptr<IGuidance> term_ = std::make_unique<TerminalGuidance>();
-    
     IGuidance* strategy_{mid_.get()}; // 현재 선택된 전략(비소유), 초기값->mid
     //스레드 관련  
     std::atomic<bool> running_{false};
     std::thread worker_;
     //유도 태스크 관련
     double previous_loop_start_time_ = 0.0; //이전 루프 진입 시간 -> dt 계산에 필요
+    //콜백 관련
+     using Callback = std::function<void()>;
+    Callback termination_callback_;
+   
 
     void GuidanceTask(); //유도 태스크 
     void checkAndUpdateStrategy(missile_state_t, target_state_t);
@@ -43,7 +47,7 @@ public:
     //생성자 
     GuidanceController(MissileStateManager& msm, TargetStateManager& tm, TimePoint flight_time)
         : missile_mgr(msm), target_mgr(tm), flight_time_(flight_time) {};
-    
+     void setTerminationCallback(Callback cb);
     void setMode(GuidanceMode m);
     void setFlightStart(TimePoint tp);
     void setLink();

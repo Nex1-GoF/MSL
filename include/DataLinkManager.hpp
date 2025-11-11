@@ -1,9 +1,11 @@
 //DataLinkManager.hpp
+#pragma once
 #include "TargetStateManager.hpp"
 #include "MissileStateManager.hpp"
 #include "HeaderPacket.hpp"
 #include <vector>
 #include <thread>
+#include <functional>
 #include <atomic>
 #include <unordered_map>
 #include <sys/types.h>
@@ -13,6 +15,7 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <cstdint>
+#include <unistd.h>
 
 struct SocketConfig {
     char id[5]{};
@@ -28,6 +31,10 @@ public:
     {};
 
     ~DataLinkManager();
+
+    using Callback = std::function<void()>;
+    void setTerminationCallback(Callback cb);
+    
     void setDataLink();
     void startDataLink();
     void stopDataLink();
@@ -38,7 +45,8 @@ public:
 private:
     TargetStateManager& tsm_;
     MissileStateManager& msm_;
-
+    //콜백 관련 
+    Callback termination_callback_;
     //스레드 관련 
     std::atomic<bool> running_{false};
     std::thread datalink_worker_;
@@ -59,8 +67,11 @@ private:
     //패킷 관련
     const char* s_id_ = "M001";
     const char* d_id_ = "C001";
+    //수신 측 ip, port
     char dest_ip_[16] = "127.0.0.1";
     int dest_port_ = 8001;
+
+    
 
     
 };

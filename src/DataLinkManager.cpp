@@ -3,8 +3,7 @@
 #include "TgtInfoPacket.hpp"
 #include "MslInfoPacket.hpp"
 #include "MslCmdPacket.hpp"
-#include <unistd.h>
-#include <arpa/inet.h>
+
 
 DataLinkManager::~DataLinkManager() noexcept
 {
@@ -20,6 +19,10 @@ DataLinkManager::~DataLinkManager() noexcept
         }
     }
     fds_.clear();
+}
+
+void DataLinkManager::setTerminationCallback(Callback cb) {
+    termination_callback_ = cb;
 }
 
 void DataLinkManager::setDataLink()
@@ -82,7 +85,10 @@ void DataLinkManager::stopDataLink()
 
 void DataLinkManager::joinDataLink()
 {
-     if (datalink_worker_.joinable()) datalink_worker_.join();
+    if (datalink_worker_.joinable())
+        datalink_worker_.join();
+    if (command_worker_.joinable())
+        command_worker_.join();
 }
 
 // 업링크/다운링크 처리 태스크
@@ -110,22 +116,25 @@ void DataLinkManager::DataLinkTask()
                 continue;
 
             /*1. 최신 타겟 정보 갱신 */
+            // (1) deserialize
             TgtInfoPacket pkt = TgtInfoPacket::deserialize(packetData);
 
             /*----------로깅용---------- */
             pkt.print();
             /*----------로깅용---------- */
+            // (2) target_state_t  load
             target_state_t received_tg = pkt.getTargetState();
+            // (3) update 
             tsm_.updateState(received_tg.r_t, received_tg.v_t, received_tg.t);
 
             /* 2. 다운링크 전송(최신 유도탄 정보) */
             missile_state_t msl_to_send = msm_.getMissileState();
             Vec3 r_m = msl_to_send.r_m;
             
-            // 헤더 생성
+            //(1) 헤더 생성
             HeaderPacket header(s_id_, d_id_, 0, MSL_INFO_PACKET_SIZE);
             
-            // serialize (임시)
+            //(2) serialize (임시)
             MslInfoPacket mpk(header, doubleToI32(r_m[0]), doubleToI32(r_m[1]),doubleToI32(r_m[2]),
                                 0, 0, 0,
                         doubleToI32(msl_to_send.last_update_time), msl_to_send.f_status, msl_to_send.t_status);
@@ -135,7 +144,7 @@ void DataLinkManager::DataLinkTask()
             /*----------로깅용---------- */
             std::vector<uint8_t> packet = mpk.serialize();
             
-            // send downlink
+            //(3) send downlink
             sockaddr_in destAddr{};
             destAddr.sin_family = AF_INET;
             destAddr.sin_port = htons(dest_port_);
@@ -181,8 +190,10 @@ void DataLinkManager::CommandTask()
         int recvsize = recvfrom(curfd, buffer, MAXLINE, 0, (sockaddr *)&clientAddr, &len);
         if (recvsize > 0)
         {
-            /*수신 즉시 비상 폭파 명령 처리 */
-            
+            /*수신 즉시 비상 폭파 명령 처리 (패킷 깔 필요 x)*/
+            // (1). 종료 로그 저장 msm_.updateAFinalLog()
+            // (2)  stopDataLink , stopGuidanceTask
+            if (termination_callback_) termination_callback_(); // TaskManager.stop() 호출 -> 모든 태스크 종료(guidance, datalink, cmd) 
 
         }
         else if (recvsize == 0)

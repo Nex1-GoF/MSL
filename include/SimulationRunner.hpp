@@ -1,3 +1,4 @@
+#pragma once
 #include "TargetStateManager.hpp"
 #include "atomic"
 #include <thread>
