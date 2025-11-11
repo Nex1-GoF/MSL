@@ -41,8 +41,8 @@ GuidanceFunction::solveInterceptCV(const missile_state_t& m,
         const double Rmag = norm3(R);
         const Vec3 rhat = (Rmag < 1e-12) ? Vec3{ 0,0,0 } : scale3(R, 1.0 / Rmag);
         const Vec3 v_rel_geom = sub3(t.v_t, scale3(m.u_m, m.V_m));
-        const double Vc_geom = std::max(-dot3(v_rel_geom, rhat), 50.0); // 안전 하한
-        sol.tgo = clip(Rmag / Vc_geom, 1e-3, 30.0);
+        const double Vc_geom = std::max(-dot3(v_rel_geom, rhat), 10.0); // 안전 하한
+        sol.tgo = clip(Rmag / Vc_geom, 0.05, 120.0);
         sol.ok = true; // 근사는 항상 유효로 간주
     }
     sol.pip = add3(t.r_t, scale3(t.v_t, sol.tgo));

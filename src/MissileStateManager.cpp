@@ -9,12 +9,14 @@ MissileStateManager::getMissileState() {
 
 
 void
-MissileStateManager::updateState( missile_state_t new_state, Vec3 new_a_f, double time_now ) {\
+MissileStateManager::updateState( missile_state_t new_state, Vec3 new_a_f, Vec3 new_pip, double time_now, char f_status) {
     std::lock_guard<std::mutex> lock(mtx);
     msl_state.r_m = new_state.r_m; //위치 갱신 
     msl_state.u_m = new_state.u_m;  //진행 방향 단위벡터 갱신 
     msl_state.a_f_ = new_a_f;
+    msl_state.pip = new_pip;
     msl_state.last_update_time = time_now; 
+    msl_state.f_status = f_status;
 }
 //초기 유도에서 유도탄 상태 업데이트
 void 
@@ -64,3 +66,8 @@ MissileStateManager::setInitialState(Vec3 u_m_init){
 }
 
 
+void 
+MissileStateManager::setFlightSatate(char state){
+    std::lock_guard<std::mutex> lock(mtx);
+    msl_state.f_status = state;
+}
