@@ -191,7 +191,7 @@ void DataLinkManager::CommandTask()
         if (recvsize > 0)
         {
             /*수신 즉시 비상 폭파 명령 처리 */
-            
+            std::cout << "Emergency command received! Initiating self-destruct sequence.\n";
 
         }
         else if (recvsize == 0)
