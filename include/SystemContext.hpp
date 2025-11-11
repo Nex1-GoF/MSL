@@ -56,14 +56,14 @@ private:
     const char* s_id_ = "M001";
     const char* d_id_ = "C001";
     //C2 ip, port 
-    char dest_ip_[16] = "127.0.0.1";
-    int dest_port_ = 8001;
+    char dest_ip_[16] = "192.168.2.239";
+    int dest_port_ = 7005;
     //MSL ip, port 
-    char ip_rx_[16] = "127.0.0.1";
-    int port_rx_ = 9011;
+    char ip_rx_[16] = "192.168.206.129";
+    int port_rx_ = 9016;
 
-    char ip_tx_[16] = "127.0.0.1";
-    int port_tx_ = 9012;
+    char ip_tx_[16] = "192.168.206.129";
+    int port_tx_ = 9015;
 
 };
 

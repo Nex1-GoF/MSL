@@ -4,6 +4,8 @@
 
 void 
 TaskManager::start() {
+
+    std::cout << "[태스크 매니저] 태스크 시작 요청 수신" << std::endl;
      // 콜백 등록
     guidance_controller_.setTerminationCallback([this]() {
         this->stop();

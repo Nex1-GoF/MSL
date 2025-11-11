@@ -204,6 +204,7 @@ void SystemContext::startInitialGuidance()
 
 void SystemContext::startGuidance_()
 {
+
     std::cout << "[중기 유도 진입, 데이터 링크 활성화]" << std::endl;
     msm_.setFlightSatate(3); // flight state 를 초기 유도로 설정
     task_manager_.start(); // 모든 태스크 한꺼번에 실행 (유도, 데이터링크, 비상 폭파 명령 수신)

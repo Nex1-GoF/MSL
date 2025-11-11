@@ -14,6 +14,7 @@ void GuidanceController::setTerminationCallback(Callback cb) {
 //전송 by SystemContext
 void
 GuidanceController::startGuidanceTask() {
+    std::cout << "[유도 컨트롤러] startGuidanceTask 진입" << std::endl;
  if (running_.exchange(true)) return;
  worker_ = std::thread(&GuidanceController::GuidanceTask, this);
 }
@@ -33,6 +34,8 @@ GuidanceController::join() {
 //스레드 함수(유도 태스크) 
 void
 GuidanceController::GuidanceTask() {
+
+    std::cout << "[유도 태스크 시작]" << std::endl;
     
     while (running_) {
         //현재 상태 불러오기

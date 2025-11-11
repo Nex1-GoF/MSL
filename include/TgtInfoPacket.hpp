@@ -2,6 +2,7 @@
 #define TGT_INFO_PACKET_HPP
 
 #include "HeaderPacket.hpp"
+#include "TargetStateManager.hpp"
 #include <cstdint>
 #include <vector>
 #include <string>
@@ -33,6 +34,7 @@ public:
     void print() const;
 
     const HeaderPacket& getHeader() const;
+    target_state_t getTargetState();
 };
 
 #endif
