@@ -63,9 +63,8 @@ void DataLinkManager::startDataLink()
 
 void DataLinkManager::stopDataLink()
 {
-    // running_ = false
-    if (!running_.exchange(false))
-        return;
+    
+    running_.exchange(false);
 
     // shutdown socket (recvfrom 즉시 return)
     for (auto &kv : fds_)
@@ -77,10 +76,10 @@ void DataLinkManager::stopDataLink()
         }
     }
 
-    if (datalink_worker_.joinable())
-        datalink_worker_.join();
-    if (command_worker_.joinable())
-        command_worker_.join();
+    // if (datalink_worker_.joinable())
+    //     datalink_worker_.join();
+    // if (command_worker_.joinable())
+    //     command_worker_.join();
 }
 
 void DataLinkManager::joinDataLink()
@@ -170,6 +169,7 @@ void DataLinkManager::CommandTask()
             double flight_time_now = getFlightTimeNow();
             missile_state_t final_msl_state = msm_.getCurrentMissile(flight_time_now);   // 현재 시간에 대한 미사일 정보 가져오기
             msm_.updateState(final_msl_state, {0, 0, 0}, {0, 0, 0}, flight_time_now, 5); // 업데이트
+            
             // (2) stopDataLink , stopGuidanceTask
             if (termination_callback_)
                 termination_callback_(); // TaskManager.stop() 호출 -> 모든 태스크 종료(guidance, datalink, cmd)

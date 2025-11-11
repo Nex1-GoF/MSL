@@ -22,8 +22,8 @@ GuidanceController::startGuidanceTask() {
 //전송 by SystemContext
 void
 GuidanceController::stopGuidanceTask() {
- if (!running_.exchange(false)) return;
- if (worker_.joinable()) worker_.join();
+ if (!running_.exchange(false)) return; // running_의 값을 false로 바꾸고 이전값 반환(이미 fasle였으면 리턴)
+// if (worker_.joinable()) worker_.join();
 } 
 
 void 
