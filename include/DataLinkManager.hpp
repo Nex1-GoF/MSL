@@ -44,6 +44,7 @@ public:
     void CommandTask();  //비상 폭파 명령 수신, 처리 
     double getFlightTimeNow();
     void setFlightStart(TimePoint tp);
+    void sendDownLink();
 private:
     TargetStateManager& tsm_;
     MissileStateManager& msm_;

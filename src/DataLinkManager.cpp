@@ -4,7 +4,6 @@
 #include "MslInfoPacket.hpp"
 #include "MslCmdPacket.hpp"
 
-
 DataLinkManager::~DataLinkManager() noexcept
 {
     stopDataLink();
@@ -21,7 +20,8 @@ DataLinkManager::~DataLinkManager() noexcept
     fds_.clear();
 }
 
-void DataLinkManager::setTerminationCallback(Callback cb) {
+void DataLinkManager::setTerminationCallback(Callback cb)
+{
     termination_callback_ = cb;
 }
 
@@ -95,7 +95,7 @@ void DataLinkManager::joinDataLink()
 void DataLinkManager::DataLinkTask()
 {
 
-    const int curfd = fds_.at("tgt_info"); // 표적 정보 수신 소켓 fd 
+    const int curfd = fds_.at("tgt_info"); // 표적 정보 수신 소켓 fd
 
     while (running_)
     {
@@ -125,44 +125,11 @@ void DataLinkManager::DataLinkTask()
 
             // (2) target_state_t  load
             target_state_t received_tg = tpk.getTargetState();
-            // (3) update 
+            // (3) update
             tsm_.updateState(received_tg.r_t, received_tg.v_t, received_tg.t);
 
             /* 2. 다운링크 전송(최신 유도탄 정보) */
-            missile_state_t msl_to_send = msm_.getMissileState();
-            Vec3 r_m = msl_to_send.r_m;
-            Vec3 u_m = msl_to_send.u_m;
-            double Vm = msl_to_send.V_m;
-            Vec3 pip = msl_to_send.pip;
-            //(1) 헤더 생성
-            HeaderPacket hdr(s_id_, d_id_, 0, MSL_INFO_PACKET_SIZE);
-            
-            
-            //(2) serialize (임시)
-            MslInfoPacket mpk(hdr, 
-                            doubleToI32(r_m[0]), doubleToI32(r_m[1]),doubleToI16(r_m[2]),
-                            doubleToI32(Vm*u_m[0]), doubleToI32(Vm*u_m[1]), doubleToI16(Vm*u_m[2]),
-                            doubleToI32(pip[0]),doubleToI32(pip[1]),doubleToI16(pip[2]),
-                            doubleToU32(msl_to_send.last_update_time), msl_to_send.f_status, msl_to_send.t_status);
-            
-            /*----------로깅용---------- */
-            mpk.print();
-            std::cout << "[My mslInfo] flightime = " << msl_to_send.last_update_time << " X= " << r_m[0] << " y= " << r_m[1] << " z= " << r_m[2] << std::endl;
-            /*----------로깅용---------- */
-            std::vector<uint8_t> packet = mpk.serialize();
-            
-            //(3) send downlink
-            sockaddr_in destAddr{};
-            destAddr.sin_family = AF_INET;
-            destAddr.sin_port = htons(dest_port_);
-            inet_pton(AF_INET, dest_ip_, &destAddr.sin_addr);
-
-            int sent = sendto(tx_fd_, packet.data(), packet.size(), 0,
-                              (sockaddr *)&destAddr, sizeof(destAddr));
-
-            if (sent < 0)
-                perror("sendto");
-                
+            sendDownLink();
         }
         else if (recvsize == 0)
         {
@@ -179,7 +146,6 @@ void DataLinkManager::DataLinkTask()
                 continue;
             }
         }
-   
     }
 }
 // 비상 폭파 명령 수신, 처리 태스크
@@ -200,13 +166,13 @@ void DataLinkManager::CommandTask()
 
             std::cout << "[비상 폭파 명령 수신]" << std::endl;
             /*수신 즉시 비상 폭파 명령 처리 (패킷 깔 필요 x)*/
-            // (1). 종료 시점 상태 저장 
+            // (1). 종료 시점 상태 저장
             double flight_time_now = getFlightTimeNow();
-            missile_state_t final_msl_state = msm_.getCurrentMissile(flight_time_now); //현재 시간에 대한 미사일 정보 가져오기
-            msm_.updateState(final_msl_state,{0,0,0},{0,0,0}, flight_time_now, 5); //업데이트 
+            missile_state_t final_msl_state = msm_.getCurrentMissile(flight_time_now);   // 현재 시간에 대한 미사일 정보 가져오기
+            msm_.updateState(final_msl_state, {0, 0, 0}, {0, 0, 0}, flight_time_now, 5); // 업데이트
             // (2) stopDataLink , stopGuidanceTask
-            if (termination_callback_) termination_callback_(); // TaskManager.stop() 호출 -> 모든 태스크 종료(guidance, datalink, cmd) 
-
+            if (termination_callback_)
+                termination_callback_(); // TaskManager.stop() 호출 -> 모든 태스크 종료(guidance, datalink, cmd)
         }
         else if (recvsize == 0)
         {
@@ -226,18 +192,53 @@ void DataLinkManager::CommandTask()
     }
 }
 
-
-
-
- //현재 시각 찍고 filght time(double)으로 변환 후 반환 
- double 
- DataLinkManager::getFlightTimeNow() {
+// 현재 시각 찍고 filght time(double)으로 변환 후 반환
+double
+DataLinkManager::getFlightTimeNow()
+{
     TimePoint real_time_now = Clock::now();
-    double flight_time_now = std::chrono::duration_cast<Duration>(real_time_now - flight_time_).count(); 
+    double flight_time_now = std::chrono::duration_cast<Duration>(real_time_now - flight_time_).count();
     return flight_time_now;
 }
 
-void 
-DataLinkManager::setFlightStart(TimePoint tp) {
-     flight_time_ = tp;
+void DataLinkManager::setFlightStart(TimePoint tp)
+{
+    flight_time_ = tp;
+}
+
+
+void DataLinkManager::sendDownLink()
+{
+    missile_state_t msl_to_send = msm_.getMissileState();
+    Vec3 r_m = msl_to_send.r_m;
+    Vec3 u_m = msl_to_send.u_m;
+    double Vm = msl_to_send.V_m;
+    Vec3 pip = msl_to_send.pip;
+    //(1) 헤더 생성
+    HeaderPacket hdr(s_id_, d_id_, 0, MSL_INFO_PACKET_SIZE);
+
+    //(2) serialize (임시)
+    MslInfoPacket mpk(hdr,
+                      doubleToI32(r_m[0]), doubleToI32(r_m[1]), (int16_t)(r_m[2]),
+                      doubleToI32(Vm * u_m[0]), doubleToI32(Vm * u_m[1]), (int16_t)(Vm * u_m[2]),
+                      doubleToI32(pip[0]), doubleToI32(pip[1]), (int16_t)(pip[2]),
+                      doubleToU32(msl_to_send.last_update_time), msl_to_send.f_status, msl_to_send.t_status);
+
+    /*----------로깅용---------- */
+    std::cout << "[mslInfo] flightime = " << msl_to_send.last_update_time << " X= " << r_m[0] << " y= " << r_m[1] << " z= " << r_m[2] << std::endl;
+    /*----------로깅용---------- */
+    
+    std::vector<uint8_t> packet = mpk.serialize();
+
+    //(3) send downlink
+    sockaddr_in destAddr{};
+    destAddr.sin_family = AF_INET;
+    destAddr.sin_port = htons(dest_port_);
+    inet_pton(AF_INET, dest_ip_, &destAddr.sin_addr);
+
+    int sent = sendto(tx_fd_, packet.data(), packet.size(), 0,
+                      (sockaddr *)&destAddr, sizeof(destAddr));
+
+    if (sent < 0)
+        perror("sendto");
 }

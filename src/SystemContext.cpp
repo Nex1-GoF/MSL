@@ -14,24 +14,23 @@ SystemContext::SystemContext()
 // 메인 스레드
 void SystemContext::run()
 {
-    running_ = true;
-    while (running_)
-    {
+    
         std::cout << "[발사 절차 명령 대기중]" <<  std::endl;
         toIdle_(); // 소켓등 시스템 자원 초기화
         if (!runLaunchProcedure_())
-            continue;           // 발사 절차->중단 시 발사 대기 상태 재진입
+            return;           // 발사 절차->중단 시 발사 대기 상태 재진입
         startInitialGuidance(); // 초기 유도 수행
         startGuidance_();       // 유도 태스크 실행 -> 상태관리, 전략 설정은 GuidanceContoller 가 담당
         waitMissionEnd_();      // 종료 이벤트까지 대기
         finalizeAndReset_();    // 종료 절차
         
-    }
+    
 }
 /*---------------------------------------------------------------------------------------*/
 void SystemContext::toIdle_()
 {
     // 1. 멤버 객체 초기화
+
     // 2. 발사 절차를 위한 소켓 설정
 
     // 수신 소켓
@@ -225,6 +224,7 @@ void SystemContext::finalizeAndReset_()
 {
     // 종료 시점 유도탄 정보, flight time 전송 (GuidanceController가 종료시점의 상태 업데이트 역할)
     // 여기서는 그냥 불러와서 전송만
+    datalink_manager_.sendDownLink();
     
     std::cout << "[종료 상태 다운링크 전송 완료]" << std::endl;
 }

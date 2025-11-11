@@ -68,8 +68,8 @@ const HeaderPacket& TgtInfoPacket::getHeader() const {
 target_state_t
 TgtInfoPacket::getTargetState() {
     target_state_t tg;
-    tg.r_t = {i32ToDouble(x),i32ToDouble(y),i32ToDouble(z)};
-    tg.v_t = {i16ToDouble(vx),i16ToDouble(vy),i16ToDouble(vz)};
+    tg.r_t = {i32ToDouble(x),i32ToDouble(y),(double)(z)};
+    tg.v_t = {i32ToDouble(vx),i32ToDouble(vy),(double)(vz)};
     tg.t = i32ToDouble(detected_msl_time);
     
     return tg;
