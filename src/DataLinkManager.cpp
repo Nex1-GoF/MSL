@@ -6,18 +6,23 @@
 
 DataLinkManager::~DataLinkManager() noexcept
 {
-    stopDataLink();
+    // 1) stop signal
+    running_.exchange(false);
 
-    for (auto &kv : fds_)
-    {
-        int &fd = kv.second;
-        if (fd >= 0)
-        {
+    // 2) wake: 읽기 차단 해제
+    for (auto& kv : fds_) {
+        const int fd = kv.second;
+        if (fd >= 0) {
+            ::shutdown(fd, SHUT_RD); 
             ::close(fd);
-            fd = -1;
         }
     }
     fds_.clear();
+
+    // 3) join (자기자신 guard)
+    const auto me = std::this_thread::get_id();
+    if (datalink_worker_.joinable() && me != datalink_worker_.get_id()) datalink_worker_.join();
+    if (command_worker_.joinable()  && me != command_worker_.get_id())  command_worker_.join();
 }
 
 void DataLinkManager::setTerminationCallback(Callback cb)

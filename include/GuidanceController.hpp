@@ -23,8 +23,7 @@ private:
     TimePoint flight_time_{}; //발사 시작 시간(절대 시간)
     //모드, 상태 
     GuidanceMode mode_{GuidanceMode::Mid};
-    //for mode_ 
-    std::mutex mtx_;
+    std::mutex mtx_; //for mode_ 
     //전략 캐시 ->멤버 변수로 만들어두고 재사용
     std::unique_ptr<IGuidance> mid_ = std::make_unique<MidtermGuidance>();
     std::unique_ptr<IGuidance> term_ = std::make_unique<TerminalGuidance>();
@@ -50,6 +49,7 @@ public:
     //생성자 
     GuidanceController(MissileStateManager& msm, TargetStateManager& tm, TimePoint flight_time)
         : missile_mgr(msm), target_mgr(tm), flight_time_(flight_time) {};
+    ~GuidanceController();
     void setTerminationCallback(Callback cb);
     void setMode(GuidanceMode m);
     void setFlightStart(TimePoint tp);

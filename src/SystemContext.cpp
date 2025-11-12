@@ -11,6 +11,10 @@ SystemContext::SystemContext()
       guidance_controller_{msm_, tsm_, time_start_},
       task_manager_{guidance_controller_, datalink_manager_} {};
 
+SystemContext::~SystemContext() {
+    close(fd_tx_); // 송신 소켓에 대한 fd 반환 
+}
+
 // 메인 스레드
 void SystemContext::run()
 {
@@ -29,11 +33,10 @@ void SystemContext::run()
 /*---------------------------------------------------------------------------------------*/
 void SystemContext::toIdle_()
 {
-    // 1. 멤버 객체 초기화
+    
+    // 발사 절차를 위한 소켓 설정
 
-    // 2. 발사 절차를 위한 소켓 설정
-
-    // 수신 소켓
+    //(1) 수신 소켓 (발사 절차 명령 수신)
     int fd_rx = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd_rx < 0)
     {
@@ -54,7 +57,7 @@ void SystemContext::toIdle_()
     }
     fd_rx_ = fd_rx;
 
-    // 송신 소켓
+    //(2) 송신 소켓 (발사 절차 명령에 대한 응답 송신)
     int fd_tx = socket(AF_INET, SOCK_DGRAM, 0);
     if (fd_tx < 0)
     {

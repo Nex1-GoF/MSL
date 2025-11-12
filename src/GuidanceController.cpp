@@ -5,6 +5,13 @@
 //#include "MidtermGuidance.hpp"
 //#include "TerminalGuidance.hpp"
 
+GuidanceController::~GuidanceController() {
+    
+    //스레드 자원 해제 
+    running_.exchange(false);
+    if (worker_.joinable() && std::this_thread::get_id() != worker_.get_id())
+        worker_.join();
+}
 
 void GuidanceController::setTerminationCallback(Callback cb) {
     termination_callback_ = cb;
@@ -57,18 +64,19 @@ GuidanceController::GuidanceTask() {
         IGuidance* cur = nullptr;
         if(mode_ == GuidanceMode::Mid){
             cur = mid_.get();
-            cur_f_status = 3;
+            cur_f_status = 3; //비행상태 3:중기 
         }
         else if(mode_ == GuidanceMode::Terminal){
             cur = term_.get();
-            cur_f_status = 4;
+            cur_f_status = 4; //비행상태 4:종말 
         }
         else{
             //종료 이벤트 
             std::cout << "[기폭 성공]" << std::endl;
-            cur_f_status = 5;
+            cur_f_status = 5; //비행상태 5:종료 
             missile_mgr.updateState(missile_now, {0,0,0},{0,0,0}, flight_time_now, cur_f_status); //종료 시점의 상태 갱신 
             if (termination_callback_) termination_callback_(); // TaskManager.stop() 호출 -> 모든 태스크 종료(guidance, datalink, cmd) 
+
         }   
         
         //계산 결과 반영 

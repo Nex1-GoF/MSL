@@ -19,7 +19,8 @@
 
 class SystemContext {
 public:
-    SystemContext();//생성자 
+    SystemContext(); 
+    ~SystemContext();
     void run(); //메인 스레드 실행 
     void stop();
     
