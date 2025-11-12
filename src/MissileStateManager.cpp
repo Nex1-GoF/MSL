@@ -26,6 +26,7 @@ MissileStateManager::updateForInitialGuidance(double time_now) {
     // 등속 모델로 cur_time으로 보정
     double dt = time_now - time_prev;
     missile_state_t corrected = msl_state; 
+    corrected.r_m = add3(msl_state.r_m, scale3(scale3(msl_state.u_m, msl_state.V_m), dt));
     corrected.r_m = add3(msl_state.r_m, scale3(msl_state.u_m, dt));
     corrected.last_update_time = time_now;
     msl_state = corrected;
