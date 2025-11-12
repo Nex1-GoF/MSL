@@ -59,10 +59,28 @@ private:
     static constexpr int MAX_EVENTS = 10;
     static constexpr int MAXLINE = 1024;
     //유도탄 소켓 생성 데이터 
+    // std::vector<SocketConfig> config_vector_ = {
+    //                                             SocketConfig{"M001","tx","127.0.0.1", 9010},
+    //                                             SocketConfig{"M001", "msl_com","127.0.0.1", 9012},
+    //                                             SocketConfig{"M001", "tgt_info","127.0.0.1", 9013 }
+    //                                             };
+    // //fd 저장 맵 
+    // std::unordered_map<std::string,int> fds_; // {role, fd}
+    // //송신 버퍼 
+    // int tx_fd_;
+    // //패킷 관련
+    // const char* s_id_ = "M001";
+    // const char* d_id_ = "C001";
+    // //수신 측 ip, port
+    // char dest_ip_[16] = "127.0.0.1";
+    // int dest_port_ = 8001;
+
+    
+    //유도탄 소켓 생성 데이터 -통합
     std::vector<SocketConfig> config_vector_ = {
-                                                SocketConfig{"M001","tx","127.0.0.1", 9010},
-                                                SocketConfig{"M001", "msl_com","127.0.0.1", 9012},
-                                                SocketConfig{"M001", "tgt_info","127.0.0.1", 9013 }
+                                                SocketConfig{"M001","tx","192.168.1.51", 9010},
+                                                SocketConfig{"M001", "msl_com","192.168.1.51", 9012},
+                                                SocketConfig{"M001", "tgt_info","192.168.1.51", 9013 }
                                                 };
     //fd 저장 맵 
     std::unordered_map<std::string,int> fds_; // {role, fd}
@@ -72,10 +90,8 @@ private:
     const char* s_id_ = "M001";
     const char* d_id_ = "C001";
     //수신 측 ip, port
-    char dest_ip_[16] = "127.0.0.1";
+    char dest_ip_[16] = "192.168.1.10";
     int dest_port_ = 8001;
-
-    
 
     
 };

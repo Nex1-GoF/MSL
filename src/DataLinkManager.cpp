@@ -56,6 +56,7 @@ void DataLinkManager::setDataLink()
         fds_[cfg.role] = fd; // {role, fd} 맵에 저장
     }
     tx_fd_ = fds_.at("tx"); // 송신 전용 소켓 fd 따로 관리
+    
 }
 
 void DataLinkManager::startDataLink()

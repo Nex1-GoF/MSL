@@ -55,7 +55,7 @@ GuidanceController::GuidanceTask() {
         /*------------------------------유도 로그용--------------------------------*/
         Vec3 R = sub3(target_now.r_t, missile_now.r_m);         
         double Rmag= norm3(R) + 1e-12; //유도탄, 표적 거리
-        std::cout << "time: " << flight_time_now <<" distance: " << Rmag << " mode: " << cur_f_status << " [x: " << missile_now.r_m[0] << " y: " <<missile_now.r_m[1] <<" z: " << missile_now.r_m[2] << "]" << std::endl;
+        std::cout << "time: " << flight_time_now <<" distance: " << Rmag << "f_status: " << (int)cur_f_status << " [x: " << missile_now.r_m[0] << " y: " <<missile_now.r_m[1] <<" z: " << missile_now.r_m[2] << "]" << std::endl;
         /*------------------------------------------------------------------------*/
        
         //모드 확인과 변경 

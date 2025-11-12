@@ -56,15 +56,28 @@ private:
     int fd_tx_{-1};
     const char* s_id_ = "M001";
     const char* d_id_ = "C001";
-    //C2 ip, port 
-    char dest_ip_[16] = "192.168.2.239";
+    
+    // //C2 ip, port 
+    // char dest_ip_[16] = "192.168.2.239";
+    // int dest_port_ = 7005;
+    // //MSL ip, port 
+    // char ip_rx_[16] = "192.168.206.129";
+    // int port_rx_ = 9016;
+
+    // char ip_tx_[16] = "192.168.206.129";
+    // int port_tx_ = 9015;
+
+
+    //C2 ip, port  - 통합
+    char dest_ip_[16] = "192.168.1.100";
     int dest_port_ = 7005;
     //MSL ip, port 
-    char ip_rx_[16] = "192.168.206.129";
+    char ip_rx_[16] = "192.168.1.51";
     int port_rx_ = 9016;
 
-    char ip_tx_[16] = "192.168.206.129";
+    char ip_tx_[16] = "192.168.1.51";
     int port_tx_ = 9015;
+
 
 };
 

@@ -36,7 +36,7 @@ private:
     //유도 태스크 관련
     double previous_loop_start_time_ = 0.0; //이전 루프 진입 시간 -> dt 계산에 필요
     //콜백 관련
-     using Callback = std::function<void()>;
+    using Callback = std::function<void()>;
     Callback termination_callback_;
    
 

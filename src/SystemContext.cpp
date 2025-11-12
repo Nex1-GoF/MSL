@@ -22,12 +22,12 @@ void SystemContext::run()
         std::cout << "[발사 절차 명령 대기중]" <<  std::endl;
         toIdle_(); // 소켓등 시스템 자원 초기화
         if (!runLaunchProcedure_())
-            return;           // 발사 절차->중단 시 발사 대기 상태 재진입
+           return;           // 발사 절차->중단 시 발사 대기 상태 재진입
         startInitialGuidance(); // 초기 유도 수행
         startGuidance_();       // 유도 태스크 실행 -> 상태관리, 전략 설정은 GuidanceContoller 가 담당
         waitMissionEnd_();      // 종료 이벤트까지 대기
         finalizeAndReset_();    // 종료 절차
-        
+        //runSimulation_();
     
 }
 /*---------------------------------------------------------------------------------------*/
