@@ -170,12 +170,12 @@ bool SystemContext::runLaunchProcedure_()
             }
         }
     }
-
+    // SystemContext의 time_start_ 초기화 (시간 동기화용 -> real time을 flight time으로 변환할 때 기준 시각)
+    time_start_ = Clock::now();
     // "초기 포작 지점"과 "유도탄 초기 위치"(rm, 발사대 위치)로 유도탄 초기 방향(um) 계산(등속 직선 운동을 위해)
     Vec3 u_m_init = getInitialPIP_(pip_x, pip_y, pip_z);
     msm_.setInitialState(u_m_init);
-    // SystemContext의 time_start_ 초기화 (시간 동기화용 -> real time을 flight time으로 변환할 때 기준 시각)
-    time_start_ = Clock::now();
+    
     // 유도 태스크 실행 객체의 기준 시간 초기화
     guidance_controller_.setFlightStart(time_start_);
     datalink_manager_.setFlightStart(time_start_);
