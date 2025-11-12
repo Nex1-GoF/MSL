@@ -22,12 +22,12 @@ void SystemContext::run()
         std::cout << "[발사 절차 명령 대기중]" <<  std::endl;
         toIdle_(); // 소켓등 시스템 자원 초기화
         if (!runLaunchProcedure_())
-           return;           // 발사 절차->중단 시 발사 대기 상태 재진입
+            return;           // 발사 절차->중단 시 발사 대기 상태 재진입
         startInitialGuidance(); // 초기 유도 수행
         startGuidance_();       // 유도 태스크 실행 -> 상태관리, 전략 설정은 GuidanceContoller 가 담당
         waitMissionEnd_();      // 종료 이벤트까지 대기
         finalizeAndReset_();    // 종료 절차
-        //runSimulation_();
+        runSimulation_();
     
 }
 /*---------------------------------------------------------------------------------------*/
@@ -185,14 +185,18 @@ bool SystemContext::runLaunchProcedure_()
 
 void SystemContext::startInitialGuidance()
 {
+
+    TimePoint time_start_ = Clock::now();
+
     std::cout << "[초기 유도 진입]" << std::endl;
     msm_.setFlightSatate(2); // flight state 를 초기 유도로 설정
+    double flight_time_now;
     /*확정 x*/
     while (true)
     {
         
         TimePoint real_time_now = Clock::now();
-        double flight_time_now = std::chrono::duration_cast<Duration>(real_time_now - time_start_).count();
+        flight_time_now = std::chrono::duration_cast<Duration>(real_time_now - time_start_).count();
         if (flight_time_now >= 5.0)
         {
             msm_.updateForInitialGuidance(flight_time_now); // 현재 시각 기준으로 msl 업데이트 (등속 운동)
@@ -201,7 +205,9 @@ void SystemContext::startInitialGuidance()
         /* 구현 x -100 ms 동안 sleep" */
         std::this_thread::sleep_until(Clock::now() + 200ms);
     }
-
+    
+    missile_state_t m = msm_.getMissileState();
+    std::cout << "[초기 유도 후 위치 x: " << m.r_m[0] << " y: " << m.r_m[1] << " z: " << m.r_m[2] << "]" << std::endl;    
     return;
 }
 
@@ -246,6 +252,7 @@ SystemContext::getInitialPIP_(int32_t pip_x, int32_t pip_y, int32_t pip_z) {
     }
     return Vec3{ x / n, y / n, z / n };
 }
+
 
 void SystemContext::runSimulation_()
 {
