@@ -5,7 +5,7 @@
 void 
 TaskManager::start() {
 
-    std::cout << "[태스크 매니저] 태스크 시작 요청 수신" << std::endl;
+    
      // 콜백 등록
     guidance_controller_.setTerminationCallback([this]() {
         this->stop();
@@ -15,9 +15,11 @@ TaskManager::start() {
         this->stop();
     });
     //스레드 실행 
+    std::cout << "[데이터 링크 태스크 실행]" << std::endl;
     datalink_manager_.setDataLink();
     datalink_manager_.startDataLink();
-    std::this_thread::sleep_for(std::chrono::milliseconds(500));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+    std::cout << "[유도 태스크 실행]" << std::endl;
     guidance_controller_.startGuidanceTask();
 }
 void 
