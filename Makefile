@@ -1,7 +1,7 @@
 # ========================
 # 기본 설정
 # ========================
-CXX := g++ 
+CXX := arm-linux-gnueabihf-g++ 
 CXXFLAGS := -std=c++17 -Wall -Wextra -Iinclude
 LDFLAGS := -pthread
 SRC_DIR := src

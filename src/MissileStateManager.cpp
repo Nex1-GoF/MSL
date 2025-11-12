@@ -29,6 +29,7 @@ MissileStateManager::updateForInitialGuidance(double time_now) {
     missile_state_t corrected = msl_state; 
     corrected.r_m = add3(msl_state.r_m, scale3(scale3(msl_state.u_m, msl_state.V_m), dt)); //5초 후 위치
     corrected.last_update_time = time_now; //현재 시간 (5초)
+
     msl_state = corrected;
 }
 
