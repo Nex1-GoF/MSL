@@ -99,7 +99,7 @@ void DataLinkManager::joinDataLink()
 // 업링크/다운링크 처리 태스크
 void DataLinkManager::DataLinkTask()
 {
-
+    std::cout << "[Start DataLinkTask]" << std::endl;
     const int curfd = fds_.at("tgt_info"); // 표적 정보 수신 소켓 fd
 
     while (running_)
@@ -231,7 +231,19 @@ void DataLinkManager::sendDownLink()
                       doubleToU32(msl_to_send.last_update_time), msl_to_send.f_status, msl_to_send.t_status);
 
     /*----------로깅용---------- */
-    std::cout << "[mslInfo] flightime = " << msl_to_send.last_update_time << " X= " << r_m[0] << " y= " << r_m[1] << " z= " << r_m[2] << std::endl;
+    
+    
+    
+     std::cout
+            << "[MslInfoPacket]"
+            << "[flight time(s) =" << msl_to_send.last_update_time
+            << " , pos(m)=("
+            << i32ToDouble(r_m[0]) << ", "
+            << i32ToDouble(r_m[1]) << ", "
+            << i32ToDouble(r_m[2]) << ")"
+            << "]"
+            << std::endl;
+
     /*----------로깅용---------- */
     
     std::vector<uint8_t> packet = mpk.serialize();

@@ -18,7 +18,7 @@ SystemContext::~SystemContext() {
 // 메인 스레드
 void SystemContext::run()
 {
-    
+
         std::cout << "[발사 절차 명령 대기중]" <<  std::endl;
         toIdle_(); // 소켓등 시스템 자원 초기화
         if (!runLaunchProcedure_())
@@ -27,7 +27,7 @@ void SystemContext::run()
         startGuidance_();       // 유도 태스크 실행 -> 상태관리, 전략 설정은 GuidanceContoller 가 담당
         waitMissionEnd_();      // 종료 이벤트까지 대기
         finalizeAndReset_();    // 종료 절차
-        runSimulation_();
+        //runSimulation_();
     
 }
 /*---------------------------------------------------------------------------------------*/
@@ -112,13 +112,13 @@ bool SystemContext::runLaunchProcedure_()
                 KeyPacket rcv_pk = KeyPacket::deserialize(packetData);
                 rcv_pk.getKey(key);
                 // 로그
-                std::cout << "RX cur_seq=" << cur_seq << " key=";
+                std::cout << "[RX cur_seq=" << cur_seq << " key=";
                 for (int i = 0; i < 32; ++i)
                 {
                     if (i) std::cout << ' ';
                     std::cout << (int)key[i];
                 }
-                std::cout << "\n";
+                std::cout << "]\n";
             }
             else if (cur_seq == 6)
             {
@@ -126,8 +126,8 @@ bool SystemContext::runLaunchProcedure_()
                 PipPacket rcv_pk = PipPacket::deserialize(packetData);
                 pip_x = rcv_pk.getX(); pip_y = rcv_pk.getY(); pip_z = rcv_pk.getZ();
                 // 로그
-                 std::cout << "RX cur_seq=" << cur_seq
-                << " pip=(" << pip_x << "," << pip_y << "," << pip_z << ")\n";
+                 std::cout << "[RX cur_seq=" << cur_seq
+                << " (Initial PIP)-> x: " << i32ToDouble(pip_x) << ", y: " << i32ToDouble(pip_x) << ", z: " << i32ToDouble(pip_x) << " ]\n";
             }
             else if (cur_seq == 8)
             {
@@ -137,13 +137,13 @@ bool SystemContext::runLaunchProcedure_()
                 std::memset(key, 0, 32);
                 close(fd_rx_); fd_rx_ = -1;
                 close(fd_tx_); fd_tx_ = -1;
-                std::cout << "RX cur_seq=" << cur_seq << "\n";
+                std::cout << "[RX cur_seq=" << cur_seq << " ]\n";
                 return false;
             }
             else
             {
                 //로그
-                std::cout << "RX cur_seq=" << cur_seq << "\n";
+                std::cout << "[RX cur_seq=" << cur_seq << "]\n";
             }
 
             // 응답 메세지 전송 (8번 패킷 외 공통 )
