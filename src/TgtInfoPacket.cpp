@@ -54,11 +54,18 @@ TgtInfoPacket TgtInfoPacket::deserialize(const std::vector<uint8_t>& buffer) {
 }
 
 void TgtInfoPacket::print() const {
-    std::cout << "[TgtInfoPacket]\n";
-    header.print();
-    std::cout << "Detection(x=" << x << ", y=" << y << ", z=" << z
-              << ", vx=" << vx << ", vy=" << vy << ", vz=" << vz
-              << ", detected_msl_time=" << detected_msl_time << " ms)\n";
+    
+   
+    std::cout
+            << "[UpLink][TgtInfo]"
+            << "[Detected time(s) =" << detected_msl_time
+            << " , pos(m)=("
+            << i32ToDouble(x) << ", "
+            << i32ToDouble(y) << ", "
+            << i32ToDouble(z) << ")"
+            << "]"
+            << std::endl;
+
 }
 
 const HeaderPacket& TgtInfoPacket::getHeader() const {
