@@ -57,7 +57,7 @@ void TgtInfoPacket::print() const {
     
    
     std::cout
-            << "[TgtInfoPacket]"
+            << "[UpLink][TgtInfo]"
             << "[Detected time(s) =" << detected_msl_time
             << " , pos(m)=("
             << i32ToDouble(x) << ", "

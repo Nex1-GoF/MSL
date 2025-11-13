@@ -46,7 +46,7 @@ void GuidanceController::join()
 void GuidanceController::GuidanceTask()
 {
 
-    std::cout << "[Start GuidanceTask]" << std::endl;
+    std::cout << "[Start][Guidance Task]" << std::endl;
 
     while (running_)
     {
@@ -61,7 +61,7 @@ void GuidanceController::GuidanceTask()
         Vec3 R = sub3(target_now.r_t, missile_now.r_m);
         double Rmag = norm3(R) + 1e-12; // 유도탄, 표적 거리
         std::cout
-            << "[Current Flight time =" << flight_time_now
+            << "[CurrentMsl][Flight time =" << flight_time_now
             << " s, R=" << Rmag
             << " m, status=" << static_cast<int>(cur_f_status)
             << ", pos(m)=("
@@ -102,6 +102,7 @@ void GuidanceController::GuidanceTask()
         {
             // 현재 모드에 맞는 유도 알고리즘 계산
             Vec3 new_a_f = cur->calculateGuidance(missile_now, target_now, dt);
+           // PIP 갱신 (현재 MSL, TARGET 상태에 대한 PIP 반환)
             Vec3 new_pip = getCurrentPIP(missile_now, target_now);
             // 유도탄 상태 업데이트
             previous_loop_start_time_ = flight_time_now;
@@ -111,7 +112,7 @@ void GuidanceController::GuidanceTask()
         }
 
     }
-
+    std::cout << "[Stop][Guidance Task]" << std::endl;
 }
 
 // 모드 확인과 변경
@@ -125,14 +126,14 @@ void GuidanceController::checkAndUpdateStrategy(missile_state_t missile_now, tar
     {
     // Mid -> Terminal
     case GuidanceMode::Mid:
-        if (Rmag <= 10000.0)
+        if (Rmag <= distance_terminal_)
         {
             mode_ = GuidanceMode::Terminal;
         }
         break;
     // Terminal -> End
     case GuidanceMode::Terminal:
-        if (Rmag <= 50.0)
+        if (Rmag <= distance_detonate_)
         {
             mode_ = GuidanceMode::Ended;
         }
@@ -142,7 +143,7 @@ void GuidanceController::checkAndUpdateStrategy(missile_state_t missile_now, tar
     }
 }
 
-// 현재 시각 찍고 filght time(double)으로 변환 후 반환
+// 현재 시간에 대한 filght time(double) 반환
 double
 GuidanceController::getFlightTimeNow()
 {
@@ -163,6 +164,7 @@ void GuidanceController::setFlightStart(TimePoint tp)
     previous_loop_start_time_ = 0.0;
 }
 
+//현재 시점에 대한 PIP 반환
 Vec3 GuidanceController::getCurrentPIP(const missile_state_t &m, const target_state_t &t) const
 {
     // 해석적 t_go 해: (v_t·v_t - V_m^2) τ^2 + 2 (R·v_t) τ + (R·R) = 0

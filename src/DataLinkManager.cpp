@@ -96,10 +96,11 @@ void DataLinkManager::joinDataLink()
         command_worker_.join();
 }
 
-// 업링크/다운링크 처리 태스크
+// 업링크/다운링크 수행 태스크
 void DataLinkManager::DataLinkTask()
 {
-    std::cout << "[Start DataLinkTask]" << std::endl;
+    std::cout << "[Start][DataLink Task]" << std::endl;
+
     const int curfd = fds_.at("tgt_info"); // 표적 정보 수신 소켓 fd
 
     while (running_)
@@ -152,11 +153,15 @@ void DataLinkManager::DataLinkTask()
             }
         }
     }
+
+    std::cout << "[Stop][DataLink Task]" << std::endl;
 }
 // 비상 폭파 명령 수신, 처리 태스크
 // 우선 순위 설정도 고려
 void DataLinkManager::CommandTask()
 {
+    std::cout << "[Start][Command Task]" << std::endl;
+
     const int curfd = fds_.at("msl_com"); // 비상 폭파
 
     while (running_)
@@ -164,7 +169,7 @@ void DataLinkManager::CommandTask()
         uint8_t buffer[MAXLINE];
         sockaddr_in clientAddr{};
         socklen_t len = sizeof(clientAddr);
-        // 수신 대기
+        //비상 폭파 명령 수신 대기
         int recvsize = recvfrom(curfd, buffer, MAXLINE, 0, (sockaddr *)&clientAddr, &len);
         if (recvsize > 0)
         {
@@ -196,6 +201,8 @@ void DataLinkManager::CommandTask()
             }
         }
     }
+
+    std::cout << "[Stop][Command Task]" << std::endl;
 }
 
 // 현재 시각 찍고 filght time(double)으로 변환 후 반환
@@ -223,7 +230,7 @@ void DataLinkManager::sendDownLink()
     //(1) 헤더 생성
     HeaderPacket hdr(s_id_, d_id_, 0, MSL_INFO_PACKET_SIZE);
 
-    //(2) serialize (임시)
+    //(2) serialize 
     MslInfoPacket mpk(hdr,
                       doubleToI32(r_m[0]), doubleToI32(r_m[1]), (int16_t)(r_m[2]),
                       doubleToI32(Vm * u_m[0]), doubleToI32(Vm * u_m[1]), (int16_t)(Vm * u_m[2]),
@@ -235,12 +242,17 @@ void DataLinkManager::sendDownLink()
     
     
      std::cout
-            << "[MslInfoPacket]"
+            << "[DownLink][MslInfo]"
             << "[flight time(s) =" << msl_to_send.last_update_time
             << " , pos(m)=("
-            << i32ToDouble(r_m[0]) << ", "
-            << i32ToDouble(r_m[1]) << ", "
-            << i32ToDouble(r_m[2]) << ")"
+            << r_m[0] << ", "
+            << r_m[1] << ", "
+            << r_m[2] << ")"
+            << " , pip(m)=("
+            << pip[0] << ", "
+            << pip[1] << ", "
+            << pip[2] << ")"
+            << "f_status" << (int)msl_to_send.t_status
             << "]"
             << std::endl;
 
