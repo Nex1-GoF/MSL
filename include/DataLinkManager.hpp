@@ -3,6 +3,7 @@
 #include "TargetStateManager.hpp"
 #include "MissileStateManager.hpp"
 #include "HeaderPacket.hpp"
+#include "Config.hpp"
 #include <vector>
 #include <thread>
 #include <functional>
@@ -18,16 +19,21 @@
 #include <unistd.h>
 
 struct SocketConfig {
-    char id[5]{};
-    char role[10]{};
-    char ip[16]{};
-    int port{-1};
+    std::string my_id;
+    std::string role;   // "tx", "msl_com", "tgt_info"
+    std::string ip;
+    uint16_t    port;
 };
 
 class DataLinkManager {
 public:
-    DataLinkManager(TargetStateManager& tsm, MissileStateManager & msm, TimePoint flight_time)
-    :tsm_(tsm), msm_(msm), flight_time_(flight_time)
+    DataLinkManager( TargetStateManager& tsm, MissileStateManager & msm, TimePoint flight_time,const NetworkConfig& net_cfg)
+    :tsm_(tsm), msm_(msm), flight_time_(flight_time), net_cfg_(net_cfg),
+    config_vector_{
+        SocketConfig{net_cfg_.my_id, "tx",       net_cfg_.my_ip_tx,       net_cfg_.my_port_tx},
+        SocketConfig{net_cfg_.my_id, "msl_com",  net_cfg_.my_ip_com_info, net_cfg_.my_port_com_info},
+        SocketConfig{net_cfg_.my_id, "tgt_info", net_cfg_.my_ip_tgt_info, net_cfg_.my_port_tgt_info}
+      }
     {};
 
     ~DataLinkManager();
@@ -49,6 +55,7 @@ private:
     TargetStateManager& tsm_;
     MissileStateManager& msm_;
     TimePoint flight_time_{}; //발사 시작 시간(절대 시간)
+    const NetworkConfig net_cfg_;
     //콜백 관련 
     Callback termination_callback_;
     //스레드 관련 
@@ -58,30 +65,11 @@ private:
     //소켓 관련
     static constexpr int MAX_EVENTS = 10;
     static constexpr int MAXLINE = 1024;
-    //유도탄 소켓 생성 데이터 
-    // std::vector<SocketConfig> config_vector_ = {
-    //                                             SocketConfig{"M001","tx","127.0.0.1", 9010},
-    //                                             SocketConfig{"M001", "msl_com","127.0.0.1", 9012},
-    //                                             SocketConfig{"M001", "tgt_info","127.0.0.1", 9013 }
-    //                                             };
-    // //fd 저장 맵 
-    // std::unordered_map<std::string,int> fds_; // {role, fd}
-    // //송신 버퍼 
-    // int tx_fd_;
-    // //패킷 관련
-    // const char* s_id_ = "M001";
-    // const char* d_id_ = "C001";
-    // //수신 측 ip, port
-    // char dest_ip_[16] = "127.0.0.1";
-    // int dest_port_ = 8001;
+    
 
     
     //유도탄 소켓 생성 데이터 -통합
-    std::vector<SocketConfig> config_vector_ = {
-                                                SocketConfig{"M001","tx","192.168.1.51", 9010},
-                                                SocketConfig{"M001", "msl_com","192.168.1.51", 9012},
-                                                SocketConfig{"M001", "tgt_info","192.168.1.51", 9013 }
-                                                };
+    std::vector<SocketConfig> config_vector_ ;
     //fd 저장 맵 
     std::unordered_map<std::string,int> fds_; // {role, fd}
     //송신 버퍼 

@@ -41,11 +41,11 @@ void DataLinkManager::setDataLink()
             perror("socket creation failed");
             exit(EXIT_FAILURE);
         }
-
+        //미사일 수신포트 설정
         sockaddr_in addr{};
         addr.sin_family = AF_INET;
         addr.sin_port = htons(cfg.port);
-        inet_pton(AF_INET, cfg.ip, &addr.sin_addr);
+        inet_pton(AF_INET, cfg.ip.c_str(), &addr.sin_addr);
 
         if (bind(fd, reinterpret_cast<const sockaddr *>(&addr), sizeof(addr)) < 0)
         {
@@ -228,7 +228,7 @@ void DataLinkManager::sendDownLink()
     double Vm = msl_to_send.V_m;
     Vec3 pip = msl_to_send.pip;
     //(1) 헤더 생성
-    HeaderPacket hdr(s_id_, d_id_, 0, MSL_INFO_PACKET_SIZE);
+    HeaderPacket hdr(net_cfg_.my_id.c_str(), net_cfg_.c2_id.c_str(), 0, MSL_INFO_PACKET_SIZE);
 
     //(2) serialize 
     MslInfoPacket mpk(hdr,
@@ -260,11 +260,11 @@ void DataLinkManager::sendDownLink()
     
     std::vector<uint8_t> packet = mpk.serialize();
 
-    //(3) send downlink
+    //(3) send downlink (RDL로 보내기)
     sockaddr_in destAddr{};
     destAddr.sin_family = AF_INET;
-    destAddr.sin_port = htons(dest_port_);
-    inet_pton(AF_INET, dest_ip_, &destAddr.sin_addr);
+    destAddr.sin_port = htons(net_cfg_.rdl_port);
+    inet_pton(AF_INET, net_cfg_.rdl_ip.c_str(), &destAddr.sin_addr);
 
     int sent = sendto(tx_fd_, packet.data(), packet.size(), 0,
                       (sockaddr *)&destAddr, sizeof(destAddr));

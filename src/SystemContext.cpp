@@ -2,12 +2,13 @@
 #include <iostream>
 
 // 생성자 구현
-SystemContext::SystemContext()
-    : time_start_{}, // flight_time 기준 시각
+SystemContext::SystemContext(SystemConfig cfg)
+    : cfg_{cfg}, //외부에서 생성 후 주입
+      time_start_{}, // flight_time 기준 시각
       msm_{},
       tsm_{},
       simulation_runner_{tsm_},
-      datalink_manager_{tsm_, msm_, time_start_},
+      datalink_manager_{tsm_, msm_, time_start_, cfg_.network_cfg},
       guidance_controller_{msm_, tsm_, time_start_},
       task_manager_{guidance_controller_, datalink_manager_} {};
 
@@ -46,8 +47,8 @@ void SystemContext::toIdle_()
 
     sockaddr_in addr_rx{};
     addr_rx.sin_family = AF_INET;
-    addr_rx.sin_port = htons(port_rx_);
-    inet_pton(AF_INET, ip_rx_, &addr_rx.sin_addr);
+    addr_rx.sin_port = htons(cfg_.network_cfg.my_port_rx);
+    inet_pton(AF_INET, cfg_.network_cfg.my_ip_rx.c_str(), &addr_rx.sin_addr);
 
     if (bind(fd_rx, reinterpret_cast<const sockaddr *>(&addr_rx), sizeof(addr_rx)) < 0)
     {
@@ -67,8 +68,8 @@ void SystemContext::toIdle_()
 
     sockaddr_in addr_tx{};
     addr_tx.sin_family = AF_INET;
-    addr_tx.sin_port = htons(port_tx_);
-    inet_pton(AF_INET, ip_tx_, &addr_tx.sin_addr);
+    addr_tx.sin_port = htons(cfg_.network_cfg.my_port_tx);
+    inet_pton(AF_INET, cfg_.network_cfg.my_ip_tx.c_str(), &addr_tx.sin_addr);
 
     if (bind(fd_tx, reinterpret_cast<const sockaddr *>(&addr_tx), sizeof(addr_tx)) < 0)
     {
@@ -147,13 +148,13 @@ bool SystemContext::runLaunchProcedure_()
             }
 
             // 응답 메세지 전송 (8번 패킷 외 공통 )
-            HeaderPacket header(s_id_, d_id_, cur_seq, HEADER_PACKET_SIZE);
+            HeaderPacket header(cfg_.network_cfg.my_id.c_str(), cfg_.network_cfg.c2_id.c_str(), cur_seq, HEADER_PACKET_SIZE);
             std::vector<uint8_t> packet = header.serialize();
 
             sockaddr_in destAddr{};
             destAddr.sin_family = AF_INET;
-            destAddr.sin_port = htons(dest_port_);
-            inet_pton(AF_INET, dest_ip_, &destAddr.sin_addr);
+            destAddr.sin_port = htons(cfg_.network_cfg.c2_port);
+            inet_pton(AF_INET, cfg_.network_cfg.c2_ip.c_str(), &destAddr.sin_addr);
 
             int sent = sendto(fd_tx_, packet.data(), packet.size(), 0,
                               (sockaddr *)&destAddr, sizeof(destAddr));

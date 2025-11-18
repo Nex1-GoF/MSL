@@ -10,6 +10,7 @@
 #include "HeaderPacket.hpp"
 #include "KeyPacket.hpp"
 #include "PipPacket.hpp"
+#include "Config.hpp"
 #include <thread>
 #include <atomic>
 #include <chrono>
@@ -19,13 +20,14 @@
 
 class SystemContext {
 public:
-    SystemContext(); 
+    SystemContext(SystemConfig cfg); 
     ~SystemContext();
     void run(); //메인 스레드 실행 
     void stop();
     
     
 private:
+    SystemConfig cfg_;
     TimePoint time_start_; // flight time 기준 시각
     //데이터 
     MissileStateManager msm_;
