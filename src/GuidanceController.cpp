@@ -113,7 +113,7 @@ void GuidanceController::GuidanceTask()
             previous_loop_start_time_ = flight_time_now;
             missile_mgr.updateState(missile_now, new_a_f, new_pip, flight_time_now, cur_f_status, cur_t_status);
             // 일정 주기 sleep
-            std::this_thread::sleep_until(Clock::now() + 500ms);
+            std::this_thread::sleep_until(Clock::now() + 10ms);
         }
 
     }
