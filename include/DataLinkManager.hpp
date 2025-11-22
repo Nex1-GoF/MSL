@@ -18,6 +18,7 @@
 #include <cstdint>
 #include <unistd.h>
 
+
 struct SocketConfig {
     std::string my_id;
     std::string role;   // "tx", "msl_com", "tgt_info"

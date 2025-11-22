@@ -20,6 +20,7 @@ private:
     //유도 관련 설정 
     const double distance_terminal_{10000.0}; // 종말 유도 상태 진입 판단 기준 거리 (m)
     const double distance_detonate_{1000.0}; // 기폭 판단 기준 거리 (m)
+    const double distance_tdd_on_{3000.0};
     //생성자에 의해 초기화 
     MissileStateManager& missile_mgr;
     TargetStateManager& target_mgr;

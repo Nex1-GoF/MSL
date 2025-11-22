@@ -56,6 +56,7 @@ void GuidanceController::GuidanceTask()
         missile_state_t missile_now = missile_mgr.getCurrentMissile(flight_time_now);
         target_state_t target_now = target_mgr.getCurrentTarget(flight_time_now);
         char cur_f_status = missile_now.f_status;
+        uint8_t cur_t_status = missile_now.t_status;
 
         /*------------------------------유도 로그용--------------------------------*/
         Vec3 R = sub3(target_now.r_t, missile_now.r_m);
@@ -81,18 +82,22 @@ void GuidanceController::GuidanceTask()
         {
             cur = mid_.get();
             cur_f_status = 3; // 비행상태 3:중기
+            cur_t_status = MASK_DL_ON ;
         }
         else if (mode_ == GuidanceMode::Terminal)
         {
             cur = term_.get();
             cur_f_status = 4; // 비행상태 4:종말
+            if(Rmag > distance_tdd_on_ ) cur_t_status = MASK_DL_ON | MASK_SEEKER_ON;
+            else cur_t_status = MASK_DL_ON | MASK_SEEKER_ON | MASK_TDD_ON;
         }
         else
         {
             // 종료 이벤트
             std::cout << "[기폭 성공]" << std::endl;
-            cur_f_status = 5;                                                                          // 비행상태 5:종료
-            missile_mgr.updateState(missile_now, {0, 0, 0}, {0, 0, 0}, flight_time_now, cur_f_status); // 종료 시점의 상태 갱신
+            cur_f_status = 5;
+            cur_t_status = 0;                                                                           // 비행상태 5:종료
+            missile_mgr.updateState(missile_now, {0, 0, 0}, {0, 0, 0}, flight_time_now, cur_f_status, cur_t_status); // 종료 시점의 상태 갱신
             if (termination_callback_)
                 termination_callback_(); // TaskManager.stop() 호출 -> 모든 태스크 종료(guidance, datalink, cmd)
         }
@@ -106,7 +111,7 @@ void GuidanceController::GuidanceTask()
             Vec3 new_pip = getCurrentPIP(missile_now, target_now);
             // 유도탄 상태 업데이트
             previous_loop_start_time_ = flight_time_now;
-            missile_mgr.updateState(missile_now, new_a_f, new_pip, flight_time_now, cur_f_status);
+            missile_mgr.updateState(missile_now, new_a_f, new_pip, flight_time_now, cur_f_status, cur_t_status);
             // 일정 주기 sleep
             std::this_thread::sleep_until(Clock::now() + 500ms);
         }
