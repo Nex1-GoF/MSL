@@ -100,7 +100,7 @@ void DataLinkManager::joinDataLink()
 void DataLinkManager::DataLinkTask()
 {
     std::cout << "[Start][DataLink Task]" << std::endl;
-
+    int number = 0;
     const int curfd = fds_.at("tgt_info"); // 표적 정보 수신 소켓 fd
 
     while (running_)
@@ -113,6 +113,7 @@ void DataLinkManager::DataLinkTask()
 
         if (recvsize > 0)
         {
+            number++;
             std::vector<uint8_t> Serialized_TargetInfoPacket(buffer, buffer + recvsize);
             // end 라는 종료 토큰받으면 수신 태스크 종료
             if (recvsize >= 3 && std::memcmp(buffer, "end", 3) == 0)
@@ -129,7 +130,7 @@ void DataLinkManager::DataLinkTask()
             TgtInfoPacket tpk = TgtInfoPacket::deserialize(Serialized_TargetInfoPacket);
 
             /*----------로깅용---------- */
-            tpk.print();
+            if(number % 10 == 0) tpk.print();
             /*----------로깅용---------- */
 
             // (2) target_state_t  load
@@ -138,7 +139,7 @@ void DataLinkManager::DataLinkTask()
             tsm_.updateState(received_tg.r_t, received_tg.v_t, received_tg.t);
 
             /* 2. 다운링크 전송(최신 유도탄 정보) */
-            sendDownLink();
+            sendDownLink(number);
         }
         else if (recvsize == 0)
         {
@@ -166,7 +167,7 @@ void DataLinkManager::CommandTask()
     std::cout << "[Start][Command Task]" << std::endl;
 
     const int curfd = fds_.at("msl_com"); // 비상 폭파
-
+    
     while (running_)
     {
         uint8_t buffer[MAXLINE];
@@ -180,6 +181,7 @@ void DataLinkManager::CommandTask()
             
             /*수신 즉시 비상 폭파 명령 처리 (패킷 깔 필요 x)*/
             // (1). 종료 시점 상태 저장
+            
             double flight_time_now = getFlightTimeNow();
             std::cout << "[비상 폭파 명령 수신][flight time: " << flight_time_now <<"[s]]" <<std::endl;
             missile_state_t final_msl_state = msm_.getCurrentMissile(flight_time_now);   // 현재 시간에 대한 미사일 정보 가져오기
@@ -224,7 +226,7 @@ void DataLinkManager::setFlightStart(TimePoint tp)
 }
 
 
-void DataLinkManager::sendDownLink()
+void DataLinkManager::sendDownLink(int number)
 {
     missile_state_t msl_to_send = msm_.getMissileState();
     Vec3 r_m = msl_to_send.r_m;
@@ -244,7 +246,7 @@ void DataLinkManager::sendDownLink()
     /*----------로깅용---------- */
     
     
-    
+    if(number % 10 == 0){
      std::cout
             << "[DownLink][MslInfo]"
             << "[flight time(s) =" << msl_to_send.last_update_time
@@ -259,6 +261,7 @@ void DataLinkManager::sendDownLink()
             << "f_status" << (int)msl_to_send.t_status
             << "]"
             << std::endl;
+    }
 
     /*----------로깅용---------- */
 

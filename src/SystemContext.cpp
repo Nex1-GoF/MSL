@@ -235,7 +235,7 @@ void SystemContext::finalizeAndReset_()
 {
     // 종료 시점 유도탄 정보, flight time 전송 (GuidanceController가 종료시점의 상태 업데이트 역할)
     // 여기서는 그냥 불러와서 전송만
-    datalink_manager_.sendDownLink();
+    datalink_manager_.sendDownLink(10);
     
     std::cout << "[종료 상태 다운링크 전송 완료]" << std::endl;
 }

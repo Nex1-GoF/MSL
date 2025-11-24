@@ -53,7 +53,7 @@ public:
     void CommandTask();  //비상 폭파 명령 수신, 처리 
     double getFlightTimeNow();
     void setFlightStart(TimePoint tp);
-    void sendDownLink();
+    void sendDownLink(int number);
     void setSessionKey(const KeyData& in_key);
 private:
     TargetStateManager& tsm_;
