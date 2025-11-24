@@ -258,7 +258,7 @@ void DataLinkManager::sendDownLink(int number)
             << Vm * u_m[0] << ", "
             << Vm * u_m[1] << ", "
             << Vm * u_m[2] << ")"
-            << "f_status" << (int)msl_to_send.t_status
+            << "f_status= " << (int)msl_to_send.f_status
             << "]"
             << std::endl;
     }
