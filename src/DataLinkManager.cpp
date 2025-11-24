@@ -254,10 +254,10 @@ void DataLinkManager::sendDownLink(int number)
             << r_m[0] << ", "
             << r_m[1] << ", "
             << r_m[2] << ")"
-            << " , pip(m)=("
-            << pip[0] << ", "
-            << pip[1] << ", "
-            << pip[2] << ")"
+            << " , velocity(m/s)=("
+            << Vm * u_m[0] << ", "
+            << Vm * u_m[1] << ", "
+            << Vm * u_m[2] << ")"
             << "f_status" << (int)msl_to_send.t_status
             << "]"
             << std::endl;

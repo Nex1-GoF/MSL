@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-constexpr double Vm_cfg = 1500.0; //미사일 속력 
+constexpr double Vm_cfg = 3000.0; //미사일 속력 
 constexpr double distance_terminal_cfg = 10000.0; //종말 유도 진입 판단 기준 거리, 텔레메트리 seeker on 기준 거리 
 constexpr double distance_detonate_cfg = 50.0; //기폭 판단 기준거리  
 constexpr double distance_tdd_on_cfg = 3000.0; //텔레메트리 seeker on 기준 거리 
