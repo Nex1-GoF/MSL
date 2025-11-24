@@ -50,6 +50,7 @@
         "thread": "cpp",
         "typeinfo": "cpp",
         "cstring": "cpp",
-        "iomanip": "cpp"
+        "iomanip": "cpp",
+        "cinttypes": "cpp"
     }
 }

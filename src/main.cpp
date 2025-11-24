@@ -10,9 +10,15 @@
 
 int main(int argc, char** argv)
 {
-    std::string cfgPath = "config.txt";
+    std::string cfgPath = "config.txt"; //default
+
     if (argc > 1) {
-        cfgPath = argv[1]; // 다른 설정파일 선택 가능
+        // argv[1]은 "1", "2" 같은 문자열
+        std::string argNum = argv[1];
+
+        // 문자열을 조합하여 파일명 완성
+        // 예: "1"이 들어오면 -> "config_" + "1" + ".txt" = "config_1.txt"
+        cfgPath = "config_" + argNum + ".txt";
     }
     
      SystemConfig cfg;

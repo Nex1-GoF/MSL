@@ -4,7 +4,7 @@
 #include "MissileStateManager.hpp"
 #include "HeaderPacket.hpp"
 #include "Config.hpp"
-#include "SecurityHandler.hpp"
+
 #include "KeyPacket.hpp"
 #include <vector>
 #include <thread>

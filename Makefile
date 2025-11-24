@@ -2,8 +2,8 @@
 # 기본 설정
 # ========================
 CXX := arm-linux-gnueabihf-g++ 
-CXXFLAGS := -std=c++17 -Wall -Wextra -Iinclude -I./local_libs/usr/include -I./local_libs/usr/include/arm-linux-gnueabihf
-LDFLAGS := -pthread -L./local_libs/usr/lib/arm-linux-gnueabihf -lssl -lcrypto
+CXXFLAGS := -std=c++17 -Wall -Wextra -Iinclude 
+LDFLAGS := -pthread 
 SRC_DIR := src
 INC_DIR := include
 BIN_DIR := bin

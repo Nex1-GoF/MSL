@@ -6,9 +6,9 @@
 Vec3
 MidtermGuidance::calculateGuidance(missile_state_t m, target_state_t t, double dt){
     const int   PN_SIGN = +1;
-    const double N_far = 4.0;
-    const double N_near = 10.0;
-    const double K_ZEM = 0.5;
+    const double N_far = N_fal_cfg;
+    const double N_near = N_near_cfg;
+    const double K_ZEM = K_ZEM_cfg;
 
 
     const double R_GAIN_FAR = 1200.0, R_GAIN_NEAR = 300.0;

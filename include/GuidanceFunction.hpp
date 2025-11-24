@@ -3,6 +3,7 @@
 #include "Utils.hpp"
 #include "MissileStateManager.hpp"
 #include "TargetStateManager.hpp"
+#include "GuidanceConfig.hpp"
 
 struct InterceptSolution {
         Vec3   pip{ 0,0,0 };  // Predicted Intercept Point

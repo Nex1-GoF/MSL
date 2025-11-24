@@ -5,6 +5,7 @@
 #include "IGuidance.hpp"
 #include "MidtermGuidance.hpp"
 #include "TerminalGuidance.hpp"
+#include "GuidanceConfig.hpp"
 #include <thread>
 #include <atomic>
 #include <chrono>
@@ -18,9 +19,9 @@ enum class GuidanceMode { Mid, Terminal, Ended };
 class GuidanceController {
 private:
     //유도 관련 설정 
-    const double distance_terminal_{10000.0}; // 종말 유도 상태 진입 판단 기준 거리 (m)
-    const double distance_detonate_{1000.0}; // 기폭 판단 기준 거리 (m)
-    const double distance_tdd_on_{3000.0};
+    const double distance_terminal_{distance_terminal_cfg}; // 종말 유도 상태 진입 판단 기준 거리 (m)
+    const double distance_detonate_{distance_detonate_cfg}; // 기폭 판단 기준 거리 (m)
+    const double distance_tdd_on_{distance_tdd_on_cfg}; // 텔레메트리용 근접 신관 on 기준 거리 (m)  
     //생성자에 의해 초기화 
     MissileStateManager& missile_mgr;
     TargetStateManager& target_mgr;

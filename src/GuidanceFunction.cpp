@@ -62,7 +62,7 @@ GuidanceFunction::runAutopilot(Vec3 a_cmd,
     constexpr double g0 = 9.81;
     constexpr double a_sat = 35.0 * g0;  // accel saturation
     constexpr double a_rate = 70.0 * g0;  // accel rate saturation
-    constexpr double tau = 0.15;       // inner 1st-order
+    constexpr double tau = tau_cfg;       // inner 1st-order
     constexpr double tau_cmd = 0.08;       // command prefilter
     constexpr double PI = 3.14159265358979323846;
     const     double omega_max = 45.0 * PI / 180.0; // rad/s

@@ -1,0 +1,32 @@
+[guidance]
+Vm = 1200.0
+distance_terminal = 10000.0
+distance_detonate = 1000.0
+K_ZEM   = 3.5
+N_fal   = 3.0
+N_near  = 4.0
+N0      = 3.0
+Kn      = 0.8
+tau     = 0.2
+
+[network]
+my_id   = M001
+c2_id   = C001
+
+c2_ip   = 192.168.1.10
+c2_port = 8001
+
+my_ip_rx   = 192.168.1.51
+my_port_rx = 9016
+
+my_ip_tx   = 192.168.1.51
+my_port_tx = 9015
+
+my_ip_tgt_info   = 192.168.1.51
+my_port_tgt_info = 9013
+
+my_ip_com_info   = 192.168.1.51
+my_port_com_info = 9012
+
+rdl_ip   = 192.168.1.100
+rdl_port = 7005

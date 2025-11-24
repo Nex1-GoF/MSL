@@ -7,8 +7,8 @@
 Vec3
 TerminalGuidance::calculateGuidance(missile_state_t m, target_state_t t, double dt) {
     const int PN_SIGN = +1;
-    const double N0 = 3.0;   
-    const double kN = 2.5;     
+    const double N0 = N0_cfg;   
+    const double kN = Kn_cfg;     
     const double Kz = 0.25;    // ZEM 계수
 
     const Vec3 R = sub3(t.r_t, m.r_m);
