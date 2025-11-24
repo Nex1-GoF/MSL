@@ -4,6 +4,8 @@
 #include "MissileStateManager.hpp"
 #include "HeaderPacket.hpp"
 #include "Config.hpp"
+#include "SecurityHandler.hpp"
+#include "KeyPacket.hpp"
 #include <vector>
 #include <thread>
 #include <functional>
@@ -52,6 +54,7 @@ public:
     double getFlightTimeNow();
     void setFlightStart(TimePoint tp);
     void sendDownLink();
+    void setSessionKey(const KeyData& in_key);
 private:
     TargetStateManager& tsm_;
     MissileStateManager& msm_;
@@ -66,7 +69,7 @@ private:
     //소켓 관련
     static constexpr int MAX_EVENTS = 10;
     static constexpr int MAXLINE = 1024;
-    
+    KeyData key_;
 
     
     //유도탄 소켓 생성 데이터 -통합

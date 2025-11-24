@@ -84,8 +84,8 @@ bool SystemContext::runLaunchProcedure_()
 {
 
     int32_t pip_x, pip_y, pip_z;
-    uint8_t key[32];
 
+    
     while (true)
     {
 
@@ -111,13 +111,14 @@ bool SystemContext::runLaunchProcedure_()
             {
                 // 세션 키 수신
                 KeyPacket rcv_pk = KeyPacket::deserialize(packetData);
-                rcv_pk.getKey(key);
+                key_ = rcv_pk.getKey();
+                datalink_manager_.setSessionKey(key_);
                 // 로그
                 std::cout << "[RX cur_seq=" << cur_seq << " key=";
                 for (int i = 0; i < 32; ++i)
                 {
                     if (i) std::cout << ' ';
-                    std::cout << (int)key[i];
+                    std::cout << (int)key_[i];
                 }
                 std::cout << "]\n";
             }
@@ -135,7 +136,7 @@ bool SystemContext::runLaunchProcedure_()
                 // 취소 명령 수신
                 cur_seq = 0;
                 // key[32] 초기화
-                std::memset(key, 0, 32);
+                key_.fill(0);
                 close(fd_rx_); fd_rx_ = -1;
                 close(fd_tx_); fd_tx_ = -1;
                 std::cout << "[RX cur_seq=" << cur_seq << " ]\n";

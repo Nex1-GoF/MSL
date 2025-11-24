@@ -1,28 +1,32 @@
 #include "KeyPacket.hpp"
 #include <iostream>
-#include <cstring>
+
 #include <stdexcept>
 #include <iomanip>
+#include <algorithm> // std::copy
 
 KeyPacket::KeyPacket() : header() {
-    std::memset(key, 0, KEY_BODY_SIZE);
+    // std::array는 fill()로 0 초기화
+    key.fill(0);
 }
 
-KeyPacket::KeyPacket(const HeaderPacket& hdr, const uint8_t in_key[KEY_BODY_SIZE])
-    : header(hdr)
+// 생성자: 멤버 초기화 리스트를 사용해 바로 대입 (가장 효율적)
+KeyPacket::KeyPacket(const HeaderPacket& hdr, const KeyData& in_key)
+    : header(hdr), key(in_key)
 {
-    std::memcpy(key, in_key, KEY_BODY_SIZE);
+
 }
 
 std::vector<uint8_t> KeyPacket::serialize() const {
     std::vector<uint8_t> buffer;
+    buffer.reserve(KEY_PACKET_SIZE); // 성능 최적화
 
-    // 헤더 직렬화
+    // 헤더 직렬화 및 추가
     auto hbuf = header.serialize();
     buffer.insert(buffer.end(), hbuf.begin(), hbuf.end());
 
-    // 32바이트 키 추가
-    buffer.insert(buffer.end(), key, key + KEY_BODY_SIZE);
+    // 키 추가: array의 iterator 사용
+    buffer.insert(buffer.end(), key.begin(), key.end());
 
     return buffer;
 }
@@ -39,8 +43,9 @@ KeyPacket KeyPacket::deserialize(const std::vector<uint8_t>& buffer) {
     KeyPacket pkt;
     pkt.header = hdr;
 
-    // 32바이트 키 복사
-    std::memcpy(pkt.key, &buffer[HEADER_PACKET_SIZE], KEY_BODY_SIZE);
+    // 벡터의 데이터 -> pkt.key(std::array)로 복사
+    auto keyStart = buffer.begin() + HEADER_PACKET_SIZE;
+    std::copy(keyStart, keyStart + KEY_BODY_SIZE, pkt.key.begin());
 
     return pkt;
 }
@@ -49,10 +54,11 @@ void KeyPacket::print() const {
     std::cout << "[KeyPacket]\n";
     header.print();
     std::cout << "SessionKey(32 bytes): ";
-    for (size_t i = 0; i < KEY_BODY_SIZE; ++i) {
+    // 범위 기반 for 문으로 깔끔하게 출력
+    for (const auto& byte : key) {
         std::cout << std::uppercase << std::hex
                   << std::setw(2) << std::setfill('0')
-                  << static_cast<int>(key[i]);
+                  << static_cast<int>(byte);
     }
     std::cout << std::dec << "\n";
 }
@@ -61,10 +67,12 @@ const HeaderPacket& KeyPacket::getHeader() const {
     return header;
 }
 
-void KeyPacket::getKey(uint8_t out[KEY_BODY_SIZE]) const {
-    std::memcpy(out, key, KEY_BODY_SIZE);
+// Getter 구현: 단순히 멤버를 리턴하면 됨
+KeyData KeyPacket::getKey() const {
+    return key;
 }
 
-void KeyPacket::setKey(const uint8_t in[KEY_BODY_SIZE]) {
-    std::memcpy(key, in, KEY_BODY_SIZE);
+// Setter 구현: 대입 연산자로 처리
+void KeyPacket::setKey(const KeyData& in_key) {
+    key = in_key;
 }

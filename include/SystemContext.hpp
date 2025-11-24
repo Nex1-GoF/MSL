@@ -38,7 +38,7 @@ private:
     //유도부 
     GuidanceController guidance_controller_;
     TaskManager task_manager_; 
-    
+    std::array<uint8_t, 32> key_; //암호화 세션키 
     //기능 
     void toIdle_(); //초기화 절차 
     bool runLaunchProcedure_(); //발사 준비 절차 

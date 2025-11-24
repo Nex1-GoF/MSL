@@ -113,17 +113,19 @@ void DataLinkManager::DataLinkTask()
 
         if (recvsize > 0)
         {
-            std::vector<uint8_t> packetData(buffer, buffer + recvsize);
+            std::vector<uint8_t> Encrypted_TargetInfoPacket(buffer, buffer + recvsize);
             // end 라는 종료 토큰받으면 수신 태스크 종료
             if (recvsize >= 3 && std::memcmp(buffer, "end", 3) == 0)
                 return;
             // handler.handlePacket(packetData, curfd, clientAddr, len);
-            if (packetData.size() < HEADER_PACKET_SIZE)
+            if (Encrypted_TargetInfoPacket.size() < HEADER_PACKET_SIZE)
                 continue;
 
             /*1. 최신 타겟 정보 갱신 */
-            // (1) deserialize
-            TgtInfoPacket tpk = TgtInfoPacket::deserialize(packetData);
+            // (1) decrypt
+            std::vector<uint8_t> decrypted_TgtInfoPacket = SecurityHandler::decryptPayload(Encrypted_TargetInfoPacket, key_);
+            // (2) deserialize
+            TgtInfoPacket tpk = TgtInfoPacket::deserialize(decrypted_TgtInfoPacket);
 
             /*----------로깅용---------- */
             tpk.print();
@@ -257,8 +259,12 @@ void DataLinkManager::sendDownLink()
             << std::endl;
 
     /*----------로깅용---------- */
-    
-    std::vector<uint8_t> packet = mpk.serialize();
+
+    //구성한 MslInfoPacket serialize
+    std::vector<uint8_t> Serialized_MslInfoPacket = mpk.serialize(); 
+
+    //serialize 된 MslInfoPacket 암호화
+    std::vector<uint8_t> encrypted_MslInfoPacket = SecurityHandler::encryptPayload(Serialized_MslInfoPacket, key_);
 
     //(3) send downlink (RDL로 보내기)
     sockaddr_in destAddr{};
@@ -266,9 +272,16 @@ void DataLinkManager::sendDownLink()
     destAddr.sin_port = htons(net_cfg_.rdl_port);
     inet_pton(AF_INET, net_cfg_.rdl_ip.c_str(), &destAddr.sin_addr);
 
-    int sent = sendto(tx_fd_, packet.data(), packet.size(), 0,
+    int sent = sendto(tx_fd_, encrypted_MslInfoPacket.data(), encrypted_MslInfoPacket.size(), 0,
                       (sockaddr *)&destAddr, sizeof(destAddr));
 
     if (sent < 0)
         perror("sendto");
+}
+
+
+
+void
+DataLinkManager::setSessionKey(const KeyData& in_key) {
+    key_ = in_key;
 }
