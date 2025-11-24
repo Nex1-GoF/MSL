@@ -61,16 +61,16 @@ void GuidanceController::GuidanceTask()
         /*------------------------------유도 로그용--------------------------------*/
         Vec3 R = sub3(target_now.r_t, missile_now.r_m);
         double Rmag = norm3(R) + 1e-12; // 유도탄, 표적 거리
-        std::cout
-            << "[CurrentMsl][Flight time =" << flight_time_now
-            << " s, R=" << Rmag
-            << " m, status=" << static_cast<int>(cur_f_status)
-            << ", pos(m)=("
-            << missile_now.r_m[0] << ", "
-            << missile_now.r_m[1] << ", "
-            << missile_now.r_m[2] << ")"
-            << "]"
-            << std::endl;
+        // std::cout
+        //     << "[CurrentMsl][Flight time =" << flight_time_now
+        //     << " s, R=" << Rmag
+        //     << " m, status=" << static_cast<int>(cur_f_status)
+        //     << ", pos(m)=("
+        //     << missile_now.r_m[0] << ", "
+        //     << missile_now.r_m[1] << ", "
+        //     << missile_now.r_m[2] << ")"
+        //     << "]"
+        //     << std::endl;
 
         /*------------------------------------------------------------------------*/
 

@@ -177,10 +177,11 @@ void DataLinkManager::CommandTask()
         if (recvsize > 0)
         {
 
-            std::cout << "[비상 폭파 명령 수신]" << std::endl;
+            
             /*수신 즉시 비상 폭파 명령 처리 (패킷 깔 필요 x)*/
             // (1). 종료 시점 상태 저장
             double flight_time_now = getFlightTimeNow();
+            std::cout << "[비상 폭파 명령 수신][flight time: " << flight_time_now <<"[s]]" <<std::endl;
             missile_state_t final_msl_state = msm_.getCurrentMissile(flight_time_now);   // 현재 시간에 대한 미사일 정보 가져오기
             msm_.updateState(final_msl_state, {0, 0, 0}, {0, 0, 0}, flight_time_now, 5, 0); // 업데이트
             
