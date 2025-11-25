@@ -62,7 +62,8 @@ void GuidanceController::GuidanceTask()
 
     static int run_count = 0; 
     run_count++;
-    int period_scaler = 0; // 파일 출력 주기 조절용 
+    const int period_scaler = 1; // 파일 출력 주기 조절용 
+    int period_num = 0;
     std::filesystem::path file_path = log_dir;
     file_path /= "guidance_af_log_" + std::to_string(run_count) + ".csv"; // /= 연산자로 경로 결합
 
@@ -77,7 +78,7 @@ void GuidanceController::GuidanceTask()
 
     while (running_)
     {
-        period_scaler++;
+        period_num++;
         // 현재 상태 불러오기
         double flight_time_now = getFlightTimeNow(); // 현재 루프 진입 시간
         double dt = flight_time_now - previous_loop_start_time_;
@@ -142,7 +143,7 @@ void GuidanceController::GuidanceTask()
             missile_mgr.updateState(missile_now, new_a_f, new_pip, flight_time_now, cur_f_status, cur_t_status);
             
             //파일에 데이터 기록 (10 Hz, 유도 주기의 1/10)
-            if(period_scaler % 10 == 0) {
+            if(period_num % period_scaler == 0) {
             if (log_file.is_open()) {
                     log_file << std::fixed << std::setprecision(6) // 소수점 6자리까지 확보
                             << flight_time_now << "," 
