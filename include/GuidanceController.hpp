@@ -12,6 +12,7 @@
 #include <memory>
 #include <iostream>
 #include <functional>
+#include <string>
 
 enum class GuidanceMode { Mid, Terminal, Ended };
 

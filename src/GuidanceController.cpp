@@ -1,7 +1,9 @@
 // GuidanceController.cpp
 #include "GuidanceController.hpp"
 #include "IGuidance.hpp"
-
+#include <fstream>
+#include <iomanip>
+#include <filesystem>
 // #include "MidtermGuidance.hpp"
 // #include "TerminalGuidance.hpp"
 
@@ -45,11 +47,37 @@ void GuidanceController::join()
 // 스레드 함수(유도 태스크)
 void GuidanceController::GuidanceTask()
 {
+    std::string log_dir = "log"; 
 
+    // 2. 폴더가 없으면 생성 (C++17 기능)
+    // create_directories는 폴더가 이미 있으면 무시하고, 없으면 만듭니다. (에러 안 남)
+    try {
+        if (!std::filesystem::exists(log_dir)) {
+            std::filesystem::create_directories(log_dir);
+        }
+    } catch (const std::filesystem::filesystem_error& e) {
+        std::cerr << "폴더 생성 실패: " << e.what() << std::endl;
+        // 실패 시 처리가 필요하다면 여기에 작성
+    }
+
+    static int run_count = 0; 
+    run_count++;
+    int period_scaler = 0; // 파일 출력 주기 조절용 
+    std::filesystem::path file_path = log_dir;
+    file_path /= "guidance_af_log_" + std::to_string(run_count) + ".csv"; // /= 연산자로 경로 결합
+
+    // 4. 파일 열기
+    std::ofstream log_file(file_path);
+    //csv 파일 헤더 
+    if (log_file.is_open()) {
+        log_file << "Time(s),Ax(m/s^2),Ay(m/s^2),Az(m/s^2)\n";
+    }
     std::cout << "[Start][Guidance Task]" << std::endl;
+    
 
     while (running_)
     {
+        period_scaler++;
         // 현재 상태 불러오기
         double flight_time_now = getFlightTimeNow(); // 현재 루프 진입 시간
         double dt = flight_time_now - previous_loop_start_time_;
@@ -103,7 +131,7 @@ void GuidanceController::GuidanceTask()
         }
 
         // 계산 결과 반영
-        if (running_.load() == true)
+        if (running_.load() == true && cur != nullptr)
         {
             // 현재 모드에 맞는 유도 알고리즘 계산
             Vec3 new_a_f = cur->calculateGuidance(missile_now, target_now, dt);
@@ -112,11 +140,29 @@ void GuidanceController::GuidanceTask()
             // 유도탄 상태 업데이트
             previous_loop_start_time_ = flight_time_now;
             missile_mgr.updateState(missile_now, new_a_f, new_pip, flight_time_now, cur_f_status, cur_t_status);
+            
+            //파일에 데이터 기록 (10 Hz, 유도 주기의 1/10)
+            if(period_scaler % 10 == 0) {
+            if (log_file.is_open()) {
+                    log_file << std::fixed << std::setprecision(6) // 소수점 6자리까지 확보
+                            << flight_time_now << "," 
+                            << new_a_f[0] << "," 
+                            << new_a_f[1] << "," 
+                            << new_a_f[2] << "\n"; 
+                }
+            }
             // 일정 주기 sleep
             std::this_thread::sleep_until(Clock::now() + 10ms);
         }
 
+    
+
     }
+    //파일 닫기 
+     if (log_file.is_open()) {
+        log_file.close();
+        }
+
     std::cout << "[Stop][Guidance Task]" << std::endl;
 }
 
