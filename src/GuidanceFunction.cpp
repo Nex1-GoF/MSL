@@ -8,7 +8,6 @@ InterceptSolution
 GuidanceFunction::solveInterceptCV(const missile_state_t& m,
     const target_state_t& t) const
 {
-    // 해석적 t_go 해: (v_t·v_t - V_m^2) τ^2 + 2 (R·v_t) τ + (R·R) = 0
     InterceptSolution sol;
     const Vec3 R = sub3(t.r_t, m.r_m);
     const double V_m = m.V_m;
@@ -19,35 +18,44 @@ GuidanceFunction::solveInterceptCV(const missile_state_t& m,
     if (std::fabs(a) < 1e-12) {
         if (b < 0.0) {
             sol.tgo = -c / b;
-            sol.ok = (sol.tgo > 0.0);
+            sol.ok  = (sol.tgo > 0.0);
         }
-    }
-    else {
+    } else {
         const double D = b * b - 4.0 * a * c;
         if (D >= 0.0) {
             const double rt = std::sqrt(D);
             const double t1 = (-b - rt) / (2.0 * a);
             const double t2 = (-b + rt) / (2.0 * a);
-            // 양의 해 중 작은 것
+
             double tau = 1e100;
             if (t1 > 1e-6) tau = std::min(tau, t1);
             if (t2 > 1e-6) tau = std::min(tau, t2);
-            if (tau < 1e50) { sol.tgo = tau; sol.ok = true; }
+            if (tau < 1e50) {
+                sol.tgo = tau;
+                sol.ok  = true;
+            }
         }
     }
 
     if (!sol.ok) {
-        // 기하학적 근사 fallback: t_go ≈ R / Vc(LOS)
+        // [MATCH MATLAB] 기하학적 근사 fallback
         const double Rmag = norm3(R);
-        const Vec3 rhat = (Rmag < 1e-12) ? Vec3{ 0,0,0 } : scale3(R, 1.0 / Rmag);
+        const Vec3  rhat  = (Rmag < 1e-12)
+                          ? Vec3{0,0,0}
+                          : scale3(R, 1.0 / (Rmag + 1e-12));
         const Vec3 v_rel_geom = sub3(t.v_t, scale3(m.u_m, m.V_m));
-        const double Vc_geom = std::max(-dot3(v_rel_geom, rhat), 10.0); // 안전 하한
-        sol.tgo = clip(Rmag / Vc_geom, 0.05, 120.0);
-        sol.ok = true; // 근사는 항상 유효로 간주
+        const double Vc_geom  = std::max(-dot3(v_rel_geom, rhat), 1.0); // ★ 1.0
+        const double tgo_geom = (Vc_geom > 1e-6) ? (Rmag / Vc_geom) : 200.0;
+
+        // ★ 0.05 ~ 200.0 로 클리핑
+        sol.tgo = clip(tgo_geom, 0.05, 200.0);
+        sol.ok  = true;
     }
+
     sol.pip = add3(t.r_t, scale3(t.v_t, sol.tgo));
     return sol;
 }
+
 
 Vec3
 GuidanceFunction::runAutopilot(Vec3 a_cmd,
@@ -60,17 +68,17 @@ GuidanceFunction::runAutopilot(Vec3 a_cmd,
 
     // 파라미터 (MATLAB과 동일)
     constexpr double g0 = 9.81;
-    constexpr double a_sat = 35.0 * g0;  // accel saturation
-    constexpr double a_rate = 70.0 * g0;  // accel rate saturation
-    constexpr double tau = tau_cfg;       // inner 1st-order
+    constexpr double a_sat = 40.0 * g0;  // accel saturation
+    constexpr double a_rate = 100.0 * g0;  // accel rate saturation
+    constexpr double tau = 0.15;       // inner 1st-order
     constexpr double tau_cmd = 0.08;       // command prefilter
     constexpr double PI = 3.14159265358979323846;
     const     double omega_max = 45.0 * PI / 180.0; // rad/s
 
     // MIN_G 스케줄(레인지 기반)
-    constexpr double MIN_G_far = 0.5 * g0;
-    constexpr double MIN_G_near = 0.1 * g0;
-    constexpr double R_MING_FAR = 1200.0;
+    constexpr double MIN_G_far = 0 * g0;
+    constexpr double MIN_G_near = 0 * g0;
+    constexpr double R_MING_FAR = 1100.0;
     constexpr double R_MING_NEAR = 300.0;
 
     const Vec3 R = sub3(t.r_t, m.r_m);
